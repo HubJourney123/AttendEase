@@ -681,10 +681,11 @@ export default function Analytics() {
              </svg>
              <div>
                <h3 className="text-lg font-semibold text-yellow-800 mb-2">No Attendance Data Yet</h3>
-               <p className="text-yellow-700">
-                 Start taking attendance in the class "{selectedClass?.courseCode}" to see analytics.
-                 Once you mark attendance, you'll see:
-               </p>
+                <p>
+                    Start taking attendance in the class {selectedClass?.courseCode} to see analytics.
+                    Once you mark attendance, you&apos;ll see:
+                </p>
+
                <ul className="mt-2 space-y-1 text-sm text-yellow-700">
                  <li>• Daily attendance trends</li>
                  <li>• Student performance distribution</li>
