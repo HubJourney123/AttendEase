@@ -357,12 +357,12 @@ export default function Analytics() {
           </div>
         </div>
 
-        // Add this to the stats cards section (after the existing 4 cards)
-<div className="col-span-1 md:col-span-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-  <h3 className="text-lg font-semibold mb-4">Attendance Marks Distribution</h3>
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-    {[
-      { range: '≥90% (100 marks)', count: 0, icon: '🏆' },
+        {/* Add this to the stats cards section */}
+        <div className="col-span-1 md:col-span-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+          <h3 className="text-lg font-semibold mb-4">Attendance Marks Distribution</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { range: '≥90% (100 marks)', count: 0, icon: '🏆' },
       { range: '85-89% (90 marks)', count: 0, icon: '⭐' },
       { range: '80-84% (80 marks)', count: 0, icon: '✨' },
       { range: '75-79% (70 marks)', count: 0, icon: '👍' },
