@@ -357,7 +357,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Add this to the stats cards section */}
+        
         <div className="col-span-1 md:col-span-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
           <h3 className="text-lg font-semibold mb-4">Attendance Marks Distribution</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
