@@ -61,74 +61,76 @@ export default function CreateClassModal({ isOpen, onClose, onClassCreated }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-6">Create New Class</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-xl border border-gray-200 dark:border-gray-700">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">
+          Create New Class
+        </h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          <div className="mb-5">
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
               Course Code *
             </label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition"
               placeholder="CSE 2113"
               value={formData.courseCode}
               onChange={(e) => setFormData({...formData, courseCode: e.target.value})}
             />
           </div>
           
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          <div className="mb-5">
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
               Course Name *
             </label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition"
               placeholder="Computer Programming"
               value={formData.courseName}
               onChange={(e) => setFormData({...formData, courseName: e.target.value})}
             />
           </div>
           
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          <div className="mb-5">
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
               Batch *
             </label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition"
               placeholder="2k23"
               value={formData.batch}
               onChange={(e) => setFormData({...formData, batch: e.target.value})}
             />
           </div>
           
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          <div className="mb-5">
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
               Starting Roll *
             </label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition"
               placeholder="2313001"
               value={formData.startingRoll}
               onChange={(e) => setFormData({...formData, startingRoll: e.target.value})}
             />
           </div>
           
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          <div className="mb-5">
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
               Ending Roll *
             </label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition"
               placeholder="2313030"
               value={formData.endingRoll}
               onChange={(e) => setFormData({...formData, endingRoll: e.target.value})}
@@ -136,31 +138,31 @@ export default function CreateClassModal({ isOpen, onClose, onClassCreated }) {
           </div>
           
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
               Excluded Rolls (optional, comma separated)
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition"
               placeholder="2313005, 2313013"
               value={formData.excludedRolls}
               onChange={(e) => setFormData({...formData, excludedRolls: e.target.value})}
             />
           </div>
           
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition disabled:opacity-50"
+              className="px-5 py-2.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 font-medium transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
+              className="px-5 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 font-medium transition disabled:opacity-50"
             >
               {isSubmitting ? 'Creating...' : 'Create Class'}
             </button>
