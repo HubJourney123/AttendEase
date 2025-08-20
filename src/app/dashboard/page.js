@@ -99,19 +99,19 @@ export default function Dashboard() {
             <div
               key={classItem.id}
               onClick={() => router.push(`/class/${classItem.id}`)}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer p-6 border border-gray-100 hover:border-indigo-200 transform hover:-translate-y-1"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer p-6 border border-gray-100 hover:border-indigo-200 transform hover:-translate-y-1"
             >
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
                 {classItem.courseCode}
               </h2>
-              <p className="text-gray-600 font-medium mb-3 line-clamp-2">
+              <p className="text-gray-600 dark:text-gray-300 font-medium mb-3 line-clamp-2">
                 {classItem.courseName}
               </p>
               <div className="space-y-1">
-                <p className="text-sm text-gray-500 font-medium">
+                <p className="text-sm text-gray-500 dark:text-gray-300 font-medium">
                   Batch: {classItem.batch}
                 </p>
-                <p className="text-sm text-gray-500 font-medium">
+                <p className="text-sm text-gray-500 dark:text-gray-300 font-medium">
                   Roll: {classItem.startingRoll} - {classItem.endingRoll}
                 </p>
               </div>

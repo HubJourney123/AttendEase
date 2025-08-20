@@ -29,41 +29,7 @@ export default function Analytics() {
     overallAttendanceRate: 0
   })
 
-  const fetchClasses = useCallback(async () => {
-    try {
-      const response = await fetch('/api/classes')
-      const data = await response.json()
-      setClasses(data)
-      if (data.length > 0) {
-        setSelectedClass(data[0])
-        fetchAttendanceData(data[0].id)
-      }
-      setLoading(false)
-    } catch (error) {
-      toast.error('Failed to fetch classes')
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/')
-    } else if (status === 'authenticated') {
-      fetchClasses()
-    }
-  }, [status, router, fetchClasses])
-
-  const fetchAttendanceData = async (classId) => {
-    try {
-      const response = await fetch(`/api/attendance?classId=${classId}`)
-      const data = await response.json()
-      setAttendanceData(data)
-      processAnalytics(data, classes.find(c => c.id === classId))
-    } catch (error) {
-      toast.error('Failed to fetch attendance data')
-    }
-  }
-
+  // Calculate attendance marks
   const calculateAttendanceMarks = (percentage) => {
     if (percentage >= 90) return 100
     if (percentage >= 85) return 90
@@ -75,8 +41,12 @@ export default function Analytics() {
     return 0
   }
 
-  const processAnalytics = (data, classInfo) => {
-    if (!classInfo || !data || data.length === 0) {
+  // Process analytics data
+  const processAnalytics = useCallback((data, classInfo) => {
+    console.log('Processing analytics with:', { dataLength: data?.length, classInfo })
+    
+    if (!classInfo || !data) {
+      console.log('No class info or data available')
       setAnalyticsData({
         totalClasses: 0,
         totalStudents: 0,
@@ -105,11 +75,36 @@ export default function Analytics() {
       }
     }
 
+    console.log('Generated rolls:', rolls.length)
+
+    // If no attendance data yet, show empty state with student count
+    if (data.length === 0) {
+      setAnalyticsData({
+        totalClasses: 0,
+        totalStudents: rolls.length,
+        averageAttendance: 0,
+        dateWiseAttendance: [],
+        attendanceDistribution: [],
+        perfectAttendance: [],
+        atRiskStudents: rolls.map(roll => ({
+          roll,
+          present: 0,
+          absent: 0,
+          late: 0,
+          total: 0,
+          percentage: '0.0'
+        })),
+        overallAttendanceRate: 0
+      })
+      setStudentStats({})
+      return
+    }
+
     // Process date-wise attendance
     const dateGroups = {}
     const studentStatsLocal = {}
     
-    // Initialize student stats
+    // Initialize student stats for all rolls
     rolls.forEach(roll => {
       studentStatsLocal[roll] = { 
         roll, 
@@ -117,9 +112,19 @@ export default function Analytics() {
         absent: 0, 
         late: 0, 
         total: 0,
-        percentage: 0 
+        percentage: '0.0'
       }
     })
+
+    // Get unique dates
+    const uniqueDates = new Set()
+    data.forEach(record => {
+      const dateStr = new Date(record.date).toDateString()
+      uniqueDates.add(dateStr)
+    })
+    const totalClasses = uniqueDates.size
+
+    console.log('Total unique classes:', totalClasses)
 
     // Process attendance records
     data.forEach(record => {
@@ -135,24 +140,23 @@ export default function Analytics() {
         }
       }
       
+      // Update date groups
       if (record.status === 'P') {
         dateGroups[dateStr].presentCount++
-        studentStatsLocal[record.rollNumber].present++
+        if (studentStatsLocal[record.rollNumber]) {
+          studentStatsLocal[record.rollNumber].present++
+        }
       } else if (record.status === 'L') {
         dateGroups[dateStr].presentCount += 0.5
-        studentStatsLocal[record.rollNumber].late++
+        if (studentStatsLocal[record.rollNumber]) {
+          studentStatsLocal[record.rollNumber].late++
+        }
       } else {
-        studentStatsLocal[record.rollNumber].absent++
+        if (studentStatsLocal[record.rollNumber]) {
+          studentStatsLocal[record.rollNumber].absent++
+        }
       }
-      
-      studentStatsLocal[record.rollNumber].total++
     })
-
-    setStudentStats(studentStatsLocal)
-
-    // Calculate unique dates
-    const uniqueDates = [...new Set(data.map(r => new Date(r.date).toDateString()))]
-    const totalClasses = uniqueDates.length
 
     // Calculate student percentages
     Object.values(studentStatsLocal).forEach(student => {
@@ -163,6 +167,8 @@ export default function Analytics() {
       }
     })
 
+    setStudentStats(studentStatsLocal)
+
     // Sort date-wise attendance
     const dateWiseAttendance = Object.values(dateGroups)
       .sort((a, b) => a.dateObj - b.dateObj)
@@ -171,6 +177,8 @@ export default function Analytics() {
         presentStudents: Math.round(item.presentCount),
         totalStudents: item.totalStudents
       }))
+
+    console.log('Date-wise attendance:', dateWiseAttendance)
 
     // Get perfect attendance students
     const perfectAttendance = Object.values(studentStatsLocal)
@@ -215,22 +223,91 @@ export default function Analytics() {
     const effectiveTotalPresent = totalPresent + (totalLate * 0.5)
     const overallAttendanceRate = totalRecords > 0 
       ? ((effectiveTotalPresent / totalRecords) * 100).toFixed(1) 
-      : 0
+      : '0.0'
 
     const averageDailyAttendance = totalClasses > 0 
       ? (effectiveTotalPresent / totalClasses).toFixed(1)
-      : 0
+      : '0.0'
 
-    setAnalyticsData({
+    const finalData = {
       totalClasses,
       totalStudents: rolls.length,
       averageAttendance: averageDailyAttendance,
       dateWiseAttendance: dateWiseAttendance.slice(-30),
-      attendanceDistribution,
+      attendanceDistribution: attendanceDistribution.length > 0 ? attendanceDistribution : [
+        { name: 'No Data', value: 1, color: '#9CA3AF' }
+      ],
       perfectAttendance,
       atRiskStudents,
       overallAttendanceRate
-    })
+    }
+
+    console.log('Final analytics data:', finalData)
+    setAnalyticsData(finalData)
+  }, [])
+
+  // Fetch attendance data
+  const fetchAttendanceData = useCallback(async (classId, classInfo) => {
+    console.log('Fetching attendance for class:', classId)
+    try {
+      const response = await fetch(`/api/attendance?classId=${classId}`)
+      const data = await response.json()
+      console.log('Fetched attendance data:', data)
+      
+      if (Array.isArray(data)) {
+        setAttendanceData(data)
+        processAnalytics(data, classInfo)
+      } else {
+        console.error('Invalid attendance data format:', data)
+        processAnalytics([], classInfo)
+      }
+    } catch (error) {
+      console.error('Failed to fetch attendance:', error)
+      toast.error('Failed to fetch attendance data')
+      processAnalytics([], classInfo)
+    }
+  }, [processAnalytics])
+
+  // Fetch classes
+  const fetchClasses = useCallback(async () => {
+    try {
+      const response = await fetch('/api/classes')
+      const data = await response.json()
+      console.log('Fetched classes:', data)
+      
+      if (Array.isArray(data) && data.length > 0) {
+        setClasses(data)
+        setSelectedClass(data[0])
+        // Pass the class info directly to fetchAttendanceData
+        await fetchAttendanceData(data[0].id, data[0])
+      } else {
+        console.log('No classes found')
+        setClasses([])
+      }
+      setLoading(false)
+    } catch (error) {
+      console.error('Failed to fetch classes:', error)
+      toast.error('Failed to fetch classes')
+      setLoading(false)
+    }
+  }, [fetchAttendanceData])
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/')
+    } else if (status === 'authenticated') {
+      fetchClasses()
+    }
+  }, [status, router, fetchClasses])
+
+  // Handle class selection change
+  const handleClassChange = async (classId) => {
+    const cls = classes.find(c => c.id === classId)
+    console.log('Selected class:', cls)
+    setSelectedClass(cls)
+    if (cls) {
+      await fetchAttendanceData(cls.id, cls)
+    }
   }
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -279,6 +356,33 @@ export default function Analytics() {
     )
   }
 
+  // If no classes available
+  if (classes.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Analytics Dashboard</h1>
+            <p className="text-gray-600">Track attendance patterns and student performance</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+            <svg className="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-2">No Classes Found</h2>
+            <p className="text-gray-600 mb-6">Create a class first to view analytics</p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -292,11 +396,7 @@ export default function Analytics() {
         <div className="mb-6">
           <select
             value={selectedClass?.id || ''}
-            onChange={(e) => {
-              const cls = classes.find(c => c.id === e.target.value)
-              setSelectedClass(cls)
-              if (cls) fetchAttendanceData(cls.id)
-            }}
+            onChange={(e) => handleClassChange(e.target.value)}
             className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {classes.map(cls => (
@@ -307,6 +407,7 @@ export default function Analytics() {
           </select>
         </div>
 
+        {/* Rest of your component remains the same... */}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="relative overflow-hidden bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
@@ -410,44 +511,49 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Rest of the components remain the same */}
         {/* Main Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Date-wise Attendance Graph */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Daily Attendance Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={analyticsData.dateWiseAttendance}>
-                <defs>
-                  <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                  label={{ value: 'Number of Present Students', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="presentStudents"
-                  name="Present Students"
-                  stroke="#3B82F6"
-                  fillOpacity={1}
-                  fill="url(#colorPresent)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {analyticsData.dateWiseAttendance.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={analyticsData.dateWiseAttendance}>
+                  <defs>
+                    <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    label={{ value: 'Number of Present Students', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="presentStudents"
+                    name="Present Students"
+                    stroke="#3B82F6"
+                    fillOpacity={1}
+                    fill="url(#colorPresent)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-gray-500">
+                No attendance data available yet
+              </div>
+            )}
           </div>
 
           {/* Pie Chart */}
@@ -533,35 +639,69 @@ export default function Analytics() {
             <div className="max-h-64 overflow-y-auto">
               {analyticsData.atRiskStudents.length > 0 ? (
                 <div className="space-y-2">
-                  {analyticsData.atRiskStudents.map((student, index) => (
-                    <div key={student.roll} className="flex items-center justify-between p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                          !
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-800">{student.roll}</span>
-                          <div className="text-xs text-gray-500">
-                            P: {student.present} | A: {student.absent} | L: {student.late}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-red-600 font-semibold">{student.percentage}%</span>
-                        <svg className="w-5 h-5 text-red-500 ml-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">No at-risk students</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+                {analyticsData.atRiskStudents.map((student, index) => (
+                   <div key={student.roll} className="flex items-center justify-between p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                     <div className="flex items-center">
+                       <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                         !
+                       </div>
+                       <div>
+                         <span className="font-medium text-gray-800">{student.roll}</span>
+                         <div className="text-xs text-gray-500">
+                           P: {student.present} | A: {student.absent} | L: {student.late}
+                         </div>
+                       </div>
+                     </div>
+                     <div className="flex items-center">
+                       <span className="text-red-600 font-semibold">{student.percentage}%</span>
+                       <svg className="w-5 h-5 text-red-500 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                       </svg>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             ) : (
+               <p className="text-gray-500 text-center py-8">
+                 {analyticsData.totalClasses === 0 
+                   ? "No attendance data yet" 
+                   : "No at-risk students"}
+               </p>
+             )}
+           </div>
+         </div>
+       </div>
+
+       {/* Summary Statistics (Additional info when no data) */}
+       {analyticsData.totalClasses === 0 && (
+         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+           <div className="flex items-start">
+             <svg className="w-6 h-6 text-yellow-600 mt-1 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+             </svg>
+             <div>
+               <h3 className="text-lg font-semibold text-yellow-800 mb-2">No Attendance Data Yet</h3>
+               <p className="text-yellow-700">
+                 Start taking attendance in the class "{selectedClass?.courseCode}" to see analytics.
+                 Once you mark attendance, you'll see:
+               </p>
+               <ul className="mt-2 space-y-1 text-sm text-yellow-700">
+                 <li>• Daily attendance trends</li>
+                 <li>• Student performance distribution</li>
+                 <li>• Automatic marks calculation based on attendance percentage</li>
+                 <li>• Identification of at-risk students</li>
+               </ul>
+               <button
+                 onClick={() => router.push(`/class/${selectedClass?.id}`)}
+                 className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition"
+               >
+                 Go to Attendance Sheet
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   </div>
+ )
 }

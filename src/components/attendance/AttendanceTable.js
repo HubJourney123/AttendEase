@@ -15,13 +15,13 @@ const AttendanceTable = memo(({
   calculateAttendanceMarks 
 }) => {
   return (
-    <div className="relative overflow-hidden border rounded-lg shadow-sm bg-white">
+    <div className="relative overflow-hidden border rounded-lg shadow-sm bg-white dark:bg-gray-800 dark:border-gray-600">
       <div className="overflow-x-auto">
         <table className="relative w-full border-collapse">
           <thead>
             <tr className="bg-gray-100">
               {/* Fixed Roll Column Header */}
-              <th className="sticky left-0 z-20 bg-gray-100 border-r-2 border-gray-300">
+              <th className="sticky left-0 z-20 bg-gray-100 border-r-2 dark:bg-gray-800 dark:text-white border-gray-300">
                 <div className="px-3 py-2 text-sm font-semibold text-left min-w-[80px]">
                   Roll
                 </div>
@@ -29,7 +29,7 @@ const AttendanceTable = memo(({
               
               {/* Scrollable Date Headers */}
               {[...Array(24)].map((_, index) => (
-                <th key={index} className="border border-gray-300 px-1 py-1 min-w-[65px]">
+                <th key={index} className="border border-gray-300 px-1 py-1 dark:bg-gray-800 dark:text-white min-w-[65px]">
                   <DatePickerHeader
                     date={dates[index]}
                     index={index}
@@ -39,12 +39,12 @@ const AttendanceTable = memo(({
               ))}
               
               {/* Percentage Column */}
-              <th className="border border-gray-300 px-2 py-2 font-semibold bg-gray-100 min-w-[50px]">
+              <th className="border border-gray-300 px-2 py-2 font-semibold bg-gray-100 dark:bg-gray-800 dark:text-white min-w-[50px]">
                 <div className="text-sm">%</div>
               </th>
               
               {/* Marks Column */}
-              <th className="border border-gray-300 px-2 py-2 font-semibold bg-gray-100 min-w-[60px]">
+              <th className="border border-gray-300 px-2 py-2 font-semibold bg-gray-100 dark:bg-gray-800 dark:text-white min-w-[60px]">
                 <div className="text-sm">Marks</div>
               </th>
             </tr>
@@ -58,7 +58,7 @@ const AttendanceTable = memo(({
               return (
                 <tr key={roll} className="hover:bg-gray-50 group">
                   {/* Fixed Roll Column */}
-                  <td className="sticky left-0 z-10 bg-white border-r-2 border-gray-300 group-hover:bg-gray-50">
+                  <td className="sticky left-0 z-10 bg-white border-r-2 dark:bg-gray-700 dark:text-gray-200 border-gray-300 group-hover:bg-gray-50">
                     <div className="px-3 py-2 font-medium text-sm">
                       {roll}
                     </div>
@@ -77,12 +77,12 @@ const AttendanceTable = memo(({
                   ))}
                   
                   {/* Percentage Cell */}
-                  <td className="border border-gray-300 px-2 py-2 font-bold text-center bg-gray-50 text-sm">
+                  <td className="border border-gray-300 px-2 py-2 font-bold text-center bg-gray-50 dark:bg-gray-700 dark:text-gray-200 text-sm">
                     {calculatePercentage(roll)}%
                   </td>
                   
                   {/* Marks Cell with color coding */}
-                  <td className={`border border-gray-300 px-2 py-2 font-bold text-center text-sm
+                  <td className={`border border-gray-300 dark:bg-gray-700 dark:text-gray-200 px-2 py-2 font-bold text-center text-sm
                     ${marks >= 90 ? 'bg-green-100 text-green-800' : 
                       marks >= 70 ? 'bg-yellow-100 text-yellow-800' : 
                       marks >= 50 ? 'bg-orange-100 text-orange-800' : 

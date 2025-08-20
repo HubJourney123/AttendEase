@@ -9,13 +9,13 @@ const AttendanceCell = memo(({ roll, dateIndex, hasDate, status, onToggle }) => 
     
     switch(status) {
       case 'P':
-        return 'bg-green-100 hover:bg-green-200 text-green-800'
+        return 'bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-green-800 dark:text-green-200'
       case 'A':
-        return 'bg-red-100 hover:bg-red-200 text-red-800'
+        return 'bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-800 dark:text-red-200'
       case 'L':
-        return 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800'
+        return 'bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-800 dark:text-yellow-200'
       default:
-        return 'bg-green-100 hover:bg-green-200 text-green-800'
+        return 'bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-green-800 dark:text-green-200'
     }
   }
   
