@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -17,6 +17,7 @@ export default function Analytics() {
   const [selectedClass, setSelectedClass] = useState(null)
   const [attendanceData, setAttendanceData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [studentStats, setStudentStats] = useState({})
   const [analyticsData, setAnalyticsData] = useState({
     totalClasses: 0,
     totalStudents: 0,
@@ -28,15 +29,7 @@ export default function Analytics() {
     overallAttendanceRate: 0
   })
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/')
-    } else if (status === 'authenticated') {
-      fetchClasses()
-    }
-  }, [status, router])
-
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     try {
       const response = await fetch('/api/classes')
       const data = await response.json()
@@ -50,7 +43,15 @@ export default function Analytics() {
       toast.error('Failed to fetch classes')
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/')
+    } else if (status === 'authenticated') {
+      fetchClasses()
+    }
+  }, [status, router, fetchClasses])
 
   const fetchAttendanceData = async (classId) => {
     try {
@@ -61,6 +62,17 @@ export default function Analytics() {
     } catch (error) {
       toast.error('Failed to fetch attendance data')
     }
+  }
+
+  const calculateAttendanceMarks = (percentage) => {
+    if (percentage >= 90) return 100
+    if (percentage >= 85) return 90
+    if (percentage >= 80) return 80
+    if (percentage >= 75) return 70
+    if (percentage >= 70) return 60
+    if (percentage >= 65) return 50
+    if (percentage >= 60) return 40
+    return 0
   }
 
   const processAnalytics = (data, classInfo) => {
@@ -93,13 +105,13 @@ export default function Analytics() {
       }
     }
 
-    // Process date-wise attendance (Present students per date)
+    // Process date-wise attendance
     const dateGroups = {}
-    const studentStats = {}
+    const studentStatsLocal = {}
     
     // Initialize student stats
     rolls.forEach(roll => {
-      studentStats[roll] = { 
+      studentStatsLocal[roll] = { 
         roll, 
         present: 0, 
         absent: 0, 
@@ -123,26 +135,27 @@ export default function Analytics() {
         }
       }
       
-      // Count present and late students (late counts as 0.5 present)
       if (record.status === 'P') {
         dateGroups[dateStr].presentCount++
-        studentStats[record.rollNumber].present++
+        studentStatsLocal[record.rollNumber].present++
       } else if (record.status === 'L') {
         dateGroups[dateStr].presentCount += 0.5
-        studentStats[record.rollNumber].late++
+        studentStatsLocal[record.rollNumber].late++
       } else {
-        studentStats[record.rollNumber].absent++
+        studentStatsLocal[record.rollNumber].absent++
       }
       
-      studentStats[record.rollNumber].total++
+      studentStatsLocal[record.rollNumber].total++
     })
 
-    // Calculate unique dates (total classes)
+    setStudentStats(studentStatsLocal)
+
+    // Calculate unique dates
     const uniqueDates = [...new Set(data.map(r => new Date(r.date).toDateString()))]
     const totalClasses = uniqueDates.length
 
     // Calculate student percentages
-    Object.values(studentStats).forEach(student => {
+    Object.values(studentStatsLocal).forEach(student => {
       if (totalClasses > 0) {
         student.total = totalClasses
         const effectivePresent = student.present + (student.late * 0.5)
@@ -150,7 +163,7 @@ export default function Analytics() {
       }
     })
 
-    // Sort date-wise attendance by date
+    // Sort date-wise attendance
     const dateWiseAttendance = Object.values(dateGroups)
       .sort((a, b) => a.dateObj - b.dateObj)
       .map(item => ({
@@ -159,26 +172,26 @@ export default function Analytics() {
         totalStudents: item.totalStudents
       }))
 
-    // Get perfect attendance students (100%)
-    const perfectAttendance = Object.values(studentStats)
+    // Get perfect attendance students
+    const perfectAttendance = Object.values(studentStatsLocal)
       .filter(s => parseFloat(s.percentage) === 100)
       .sort((a, b) => a.roll.localeCompare(b.roll))
 
-    // Get at-risk students (below 60%)
-    const atRiskStudents = Object.values(studentStats)
+    // Get at-risk students
+    const atRiskStudents = Object.values(studentStatsLocal)
       .filter(s => parseFloat(s.percentage) < 60)
       .sort((a, b) => parseFloat(a.percentage) - parseFloat(b.percentage))
 
-    // Calculate attendance distribution for pie chart
+    // Calculate attendance distribution
     const distribution = {
-      excellent: 0,  // 90-100%
-      good: 0,       // 80-89%
-      average: 0,    // 70-79%
-      poor: 0,       // 60-69%
-      critical: 0    // Below 60%
+      excellent: 0,
+      good: 0,
+      average: 0,
+      poor: 0,
+      critical: 0
     }
 
-    Object.values(studentStats).forEach(student => {
+    Object.values(studentStatsLocal).forEach(student => {
       const pct = parseFloat(student.percentage)
       if (pct >= 90) distribution.excellent++
       else if (pct >= 80) distribution.good++
@@ -193,9 +206,9 @@ export default function Analytics() {
       { name: '70-79%', value: distribution.average, color: '#F59E0B' },
       { name: '60-69%', value: distribution.poor, color: '#FB923C' },
       { name: 'Below 60%', value: distribution.critical, color: '#EF4444' }
-    ].filter(item => item.value > 0) // Only show categories with students
+    ].filter(item => item.value > 0)
 
-    // Calculate average attendance
+    // Calculate averages
     const totalPresent = data.filter(r => r.status === 'P').length
     const totalLate = data.filter(r => r.status === 'L').length
     const totalRecords = totalClasses * rolls.length
@@ -212,7 +225,7 @@ export default function Analytics() {
       totalClasses,
       totalStudents: rolls.length,
       averageAttendance: averageDailyAttendance,
-      dateWiseAttendance: dateWiseAttendance.slice(-30), // Last 30 classes
+      dateWiseAttendance: dateWiseAttendance.slice(-30),
       attendanceDistribution,
       perfectAttendance,
       atRiskStudents,
@@ -357,50 +370,50 @@ export default function Analytics() {
           </div>
         </div>
 
-        
-        <div className="col-span-1 md:col-span-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+        {/* Attendance Marks Distribution Card */}
+        <div className="mb-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
           <h3 className="text-lg font-semibold mb-4">Attendance Marks Distribution</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { range: '≥90% (100 marks)', count: 0, icon: '🏆' },
-      { range: '85-89% (90 marks)', count: 0, icon: '⭐' },
-      { range: '80-84% (80 marks)', count: 0, icon: '✨' },
-      { range: '75-79% (70 marks)', count: 0, icon: '👍' },
-      { range: '70-74% (60 marks)', count: 0, icon: '📊' },
-      { range: '65-69% (50 marks)', count: 0, icon: '📈' },
-      { range: '60-64% (40 marks)', count: 0, icon: '⚠️' },
-      { range: '<60% (0 marks)', count: 0, icon: '❌' }
-    ].map((item, index) => {
-      // Calculate actual count from studentStats
-      let count = 0
-      Object.values(studentStats || {}).forEach(student => {
-        const pct = parseFloat(student.percentage)
-        if (index === 0 && pct >= 90) count++
-        else if (index === 1 && pct >= 85 && pct < 90) count++
-        else if (index === 2 && pct >= 80 && pct < 85) count++
-        else if (index === 3 && pct >= 75 && pct < 80) count++
-        else if (index === 4 && pct >= 70 && pct < 75) count++
-        else if (index === 5 && pct >= 65 && pct < 70) count++
-        else if (index === 6 && pct >= 60 && pct < 65) count++
-        else if (index === 7 && pct < 60) count++
-      })
-      
-      return (
-        <div key={index} className="bg-white/20 backdrop-blur rounded-lg p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-2xl">{item.icon}</span>
-            <span className="text-2xl font-bold">{count}</span>
+              { range: '≥90% (100 marks)', icon: '🏆', index: 0 },
+              { range: '85-89% (90 marks)', icon: '⭐', index: 1 },
+              { range: '80-84% (80 marks)', icon: '✨', index: 2 },
+              { range: '75-79% (70 marks)', icon: '👍', index: 3 },
+              { range: '70-74% (60 marks)', icon: '📊', index: 4 },
+              { range: '65-69% (50 marks)', icon: '📈', index: 5 },
+              { range: '60-64% (40 marks)', icon: '⚠️', index: 6 },
+              { range: '<60% (0 marks)', icon: '❌', index: 7 }
+            ].map((item) => {
+              let count = 0
+              Object.values(studentStats || {}).forEach(student => {
+                const pct = parseFloat(student.percentage)
+                if (item.index === 0 && pct >= 90) count++
+                else if (item.index === 1 && pct >= 85 && pct < 90) count++
+                else if (item.index === 2 && pct >= 80 && pct < 85) count++
+                else if (item.index === 3 && pct >= 75 && pct < 80) count++
+                else if (item.index === 4 && pct >= 70 && pct < 75) count++
+                else if (item.index === 5 && pct >= 65 && pct < 70) count++
+                else if (item.index === 6 && pct >= 60 && pct < 65) count++
+                else if (item.index === 7 && pct < 60) count++
+              })
+              
+              return (
+                <div key={item.index} className="bg-white/20 backdrop-blur rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-2xl font-bold">{count}</span>
+                  </div>
+                  <p className="text-xs">{item.range}</p>
+                </div>
+              )
+            })}
           </div>
-          <p className="text-xs">{item.range}</p>
         </div>
-      )
-    })}
-  </div>
-</div>
 
+        {/* Rest of the components remain the same */}
         {/* Main Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Date-wise Attendance Graph - Takes 2 columns */}
+          {/* Date-wise Attendance Graph */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Daily Attendance Trend</h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -437,7 +450,7 @@ export default function Analytics() {
             </ResponsiveContainer>
           </div>
 
-          {/* Attendance Distribution Pie Chart */}
+          {/* Pie Chart */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Attendance Distribution</h3>
             <ResponsiveContainer width="100%" height={250}>
@@ -475,7 +488,7 @@ export default function Analytics() {
 
         {/* Student Lists Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Perfect Attendance Students */}
+          {/* Perfect Attendance */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Perfect Attendance (100%)</h3>
