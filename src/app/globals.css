@@ -97,70 +97,68 @@ button:hover::before {
   background: #555;
 }
 
-/* Fix for DatePicker Portal */
-.date-picker-portal {
-  z-index: 9999 !important;
+/* Date picker custom styles */
+.react-datepicker-wrapper {
+  width: 100%;
 }
 
-.date-picker-portal .react-datepicker__portal {
-  position: fixed !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background-color: rgba(0, 0, 0, 0.5) !important;
+.react-datepicker__input-container input {
+  width: 100%;
+  text-align: center;
+  font-size: 0.875rem;
+  padding: 0.25rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
-.date-picker-portal .react-datepicker {
-  position: relative !important;
-  transform: none !important;
-  left: auto !important;
-  right: auto !important;
-  top: auto !important;
-  bottom: auto !important;
-  margin: 0 auto !important;
-  max-width: 320px !important;
-  width: 90% !important;
+.react-datepicker__input-container input:focus {
+  outline: none;
+  background: rgba(59, 130, 246, 0.1);
 }
 
-/* Ensure month/year dropdowns are visible */
-.react-datepicker__month-dropdown-container,
-.react-datepicker__year-dropdown-container {
-  position: relative !important;
-  display: inline-block !important;
-}
-
-.react-datepicker__month-dropdown,
-.react-datepicker__year-dropdown {
-  position: absolute !important;
-  z-index: 10000 !important;
-  background: white !important;
-  border: 1px solid #ddd !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
-}
-
-/* For mobile devices */
-@media (max-width: 640px) {
-  .date-picker-portal .react-datepicker {
-    max-width: 280px !important;
-    font-size: 14px !important;
+/* Print styles */
+@media print {
+  body * {
+    visibility: hidden;
   }
   
-  .react-datepicker__day-name,
-  .react-datepicker__day {
-    width: 2rem !important;
-    line-height: 2rem !important;
-    margin: 0.1rem !important;
+  .overflow-x-auto, .overflow-x-auto * {
+    visibility: visible;
+  }
+  
+  .overflow-x-auto {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
   }
 }
 
-/* Prevent keyboard on mobile */
-input[readonly] {
-  cursor: pointer !important;
-  caret-color: transparent !important;
+
+
+
+/* Prevent virtual keyboard on mobile for date inputs */
+@media (max-width: 768px) {
+  input[type="text"].react-datepicker-ignore-onclickoutside {
+    pointer-events: none;
+  }
+  
+  .react-datepicker-wrapper {
+    pointer-events: auto;
+  }
+  
+  .react-datepicker__input-container input {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
 }
+
+
+
+
+
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
