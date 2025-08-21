@@ -120,54 +120,66 @@ const handleClassDeleted = (classId) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {classes.map((classItem) => (
-            <div
-              key={classItem.id}
-              onClick={() => router.push(`/class/${classItem.id}`)}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer p-6 border border-gray-100 hover:border-indigo-200 transform hover:-translate-y-1"
+  {classes.map((classItem) => (
+    <div
+      key={classItem.id}
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 transform hover:-translate-y-1"
+    >
+      {/* Card Header with Actions - Always Visible */}
+      <div className="p-6 pb-3">
+        <div className="flex justify-between items-start mb-3">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+            {classItem.courseCode}
+          </h2>
+          {/* Action Buttons - Always Visible */}
+          <div className="flex space-x-1">
+            <button
+              onClick={(e) => handleEdit(e, classItem)}
+              className="p-2 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 rounded-lg transition"
+              title="Edit Class"
             >
-              <div className="absolute top-4 right-4 flex space-x-2">
-                <button
-                  onClick={(e) => handleEdit(e, classItem)}
-                  className="p-2 bg-blue-100 hover:bg-blue-200 rounded-lg transition"
-                  title="Edit"
-                >
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={(e) => handleDelete(e, classItem)}
-                  className="p-2 bg-red-100 hover:bg-red-200 rounded-lg transition"
-                  title="Delete"
-                >
-                  <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
-                {classItem.courseCode}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 font-medium mb-3 line-clamp-2">
-                {classItem.courseName}
-              </p>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500 dark:text-gray-300 font-medium">
-                  Batch: {classItem.batch}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-300 font-medium">
-                  Roll: {classItem.startingRoll} - {classItem.endingRoll}
-                </p>
-              </div>
-              <div className="mt-4">
-                <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">
-                  View Class
-                </span>
-              </div>
-            </div>
-          ))}
+              <svg className="w-4 h-4 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => handleDelete(e, classItem)}
+              className="p-2 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 rounded-lg transition"
+              title="Delete Class"
+            >
+              <svg className="w-4 h-4 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
         </div>
+        
+        {/* Clickable Content Area */}
+        <div 
+          onClick={() => router.push(`/class/${classItem.id}`)}
+          className="cursor-pointer"
+        >
+          <p className="text-gray-600 dark:text-gray-300 font-medium mb-3 line-clamp-2">
+            {classItem.courseName}
+          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+              Batch: {classItem.batch}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+              Roll: {classItem.startingRoll} - {classItem.endingRoll}
+            </p>
+          </div>
+          <div className="mt-4">
+            <span className="inline-block bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full">
+              View Class →
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
       )}
 
       <CreateClassModal
