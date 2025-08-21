@@ -21,6 +21,14 @@ export default function AttendanceSheet({ classData }) {
 
   const rollNumbers = generateRollNumbers(classData)
 
+  // Helper function to format date consistently
+  const formatDateKey = (date) => {
+    if (!date) return null
+    const d = new Date(date)
+    // Use ISO date format (YYYY-MM-DD) for consistency
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
   useEffect(() => {
     fetchAttendance()
   }, [])
@@ -31,26 +39,29 @@ export default function AttendanceSheet({ classData }) {
       const data = await response.json()
       
       const attendanceMap = {}
-      const uniqueDates = new Set()
+      const dateColumnMap = new Map()
       
+      // Group attendance by date
       data.forEach(record => {
         const dateObj = new Date(record.date)
-        const dateStr = dateObj.toLocaleDateString()
-        const key = `${record.rollNumber}-${dateStr}`
+        const dateKey = formatDateKey(dateObj)
+        const key = `${record.rollNumber}-${dateKey}`
         attendanceMap[key] = record.status
-        uniqueDates.add(dateStr)
-      })
-      
-      const sortedDates = Array.from(uniqueDates).sort((a, b) => {
-        return new Date(a) - new Date(b)
-      })
-      
-      const newDates = [...dates]
-      sortedDates.forEach((dateStr, index) => {
-        if (index < 24) {
-          const [month, day, year] = dateStr.split('/')
-          newDates[index] = new Date(year, month - 1, day)
+        
+        // Track which dates have data
+        if (!dateColumnMap.has(dateKey)) {
+          dateColumnMap.set(dateKey, dateObj)
         }
+      })
+      
+      // Sort dates and populate the dates array
+      const sortedDates = Array.from(dateColumnMap.entries())
+        .sort((a, b) => a[1] - b[1])
+        .slice(0, 24) // Maximum 24 dates
+      
+      const newDates = Array(24).fill(null)
+      sortedDates.forEach((entry, index) => {
+        newDates[index] = entry[1]
       })
       
       setDates(newDates)
@@ -64,9 +75,13 @@ export default function AttendanceSheet({ classData }) {
   }
 
   const handleDateChange = async (date, index) => {
-    const dateStr = date ? date.toLocaleDateString() : null
+    if (!date) return
+    
+    const dateKey = formatDateKey(date)
+    
+    // Check if this date is already selected in another column
     const existingIndex = dates.findIndex((d, i) => 
-      d && i !== index && d.toLocaleDateString() === dateStr
+      d && i !== index && formatDateKey(d) === dateKey
     )
     
     if (existingIndex !== -1) {
@@ -75,8 +90,48 @@ export default function AttendanceSheet({ classData }) {
     }
 
     const newDates = [...dates]
+    const oldDate = dates[index]
     newDates[index] = date
     setDates(newDates)
+
+    // If there was no old date, save default attendance (all present)
+    if (!oldDate) {
+      // Save all students as present for this new date
+      for (const rollNumber of rollNumbers) {
+        await saveAttendance(rollNumber, date, 'P')
+      }
+      
+      // Update local state
+      const newDateKey = formatDateKey(date)
+      const updatedAttendance = { ...attendanceData }
+      rollNumbers.forEach(roll => {
+        updatedAttendance[`${roll}-${newDateKey}`] = 'P'
+      })
+      setAttendanceData(updatedAttendance)
+      
+      toast.success('Date added with all present', { duration: 1000 })
+    }
+  }
+
+  const saveAttendance = async (rollNumber, date, status) => {
+    try {
+      const response = await fetch('/api/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          classId: classData.id,
+          date: date.toISOString(),
+          rollNumber,
+          status
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to save attendance')
+      }
+    } catch (error) {
+      console.error('Error saving attendance:', error)
+    }
   }
 
   const toggleAttendance = async (rollNumber, dateIndex) => {
@@ -86,8 +141,8 @@ export default function AttendanceSheet({ classData }) {
       return
     }
 
-    const dateStr = date.toLocaleDateString()
-    const key = `${rollNumber}-${dateStr}`
+    const dateKey = formatDateKey(date)
+    const key = `${rollNumber}-${dateKey}`
     const currentStatus = attendanceData[key] || 'P'
     
     // Cycle through P -> A -> L -> P
@@ -107,35 +162,24 @@ export default function AttendanceSheet({ classData }) {
     }
 
     try {
-      const response = await fetch('/api/attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          classId: classData.id,
-          date: date.toISOString(),
-          rollNumber,
-          status: newStatus
-        })
-      })
-
-      if (response.ok) {
-        setAttendanceData(prev => ({
-          ...prev,
-          [key]: newStatus
-        }))
-        
-        const statusMessage = {
-          'P': 'Present',
-          'A': 'Absent',
-          'L': 'Late'
-        }
-        
-        toast.success(`Marked ${statusMessage[newStatus]}`, {
-          duration: 500,
-          position: 'bottom-center',
-          icon: newStatus === 'P' ? '✅' : newStatus === 'A' ? '❌' : '⏰'
-        })
+      await saveAttendance(rollNumber, date, newStatus)
+      
+      setAttendanceData(prev => ({
+        ...prev,
+        [key]: newStatus
+      }))
+      
+      const statusMessage = {
+        'P': 'Present',
+        'A': 'Absent',
+        'L': 'Late'
       }
+      
+      toast.success(`Marked ${statusMessage[newStatus]}`, {
+        duration: 500,
+        position: 'bottom-center',
+        icon: newStatus === 'P' ? '✅' : newStatus === 'A' ? '❌' : '⏰'
+      })
     } catch (error) {
       toast.error('Failed to update')
     }
@@ -145,8 +189,8 @@ export default function AttendanceSheet({ classData }) {
     const date = dates[dateIndex]
     if (!date) return ''
     
-    const dateStr = date.toLocaleDateString()
-    const key = `${rollNumber}-${dateStr}`
+    const dateKey = formatDateKey(date)
+    const key = `${rollNumber}-${dateKey}`
     return attendanceData[key] || 'P'
   }
 
@@ -168,7 +212,6 @@ export default function AttendanceSheet({ classData }) {
     })
     
     if (total === 0) return '0.0'
-    // Count late as half present for percentage calculation
     const effectivePresent = present + (late * 0.5)
     return ((effectivePresent / total) * 100).toFixed(1)
   }
@@ -235,7 +278,6 @@ export default function AttendanceSheet({ classData }) {
       
       <AttendanceLegend />
       
-      {/* Attendance Marks Info */}
       <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <h4 className="font-semibold text-sm text-blue-900 mb-2">Attendance Marks Criteria:</h4>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-blue-800">
