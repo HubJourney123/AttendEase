@@ -21,6 +21,7 @@ export default function RootLayout({ children }) {
             {children}
           </main>
         </Providers>
+        <div id="datepicker-portal"></div>  {/* Add this line */}
       </body>
     </html>
   )

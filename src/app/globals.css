@@ -135,6 +135,45 @@ button:hover::before {
   }
 }
 
+/* Date picker z-index fix */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker {
+  font-size: 0.875rem !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Ensure calendar is not cut off in table */
+.overflow-x-auto {
+  overflow: visible !important;
+}
+
+/* Only make the table body scrollable */
+.overflow-x-auto table {
+  overflow-x: auto !important;
+  display: block !important;
+}
+
+/* Fix for mobile */
+@media (max-width: 640px) {
+  .react-datepicker {
+    font-size: 0.75rem !important;
+  }
+  
+  .react-datepicker__month-container {
+    width: 250px !important;
+  }
+}
+
+/* Portal positioning */
+#datepicker-portal {
+  position: relative;
+  z-index: 9999;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
