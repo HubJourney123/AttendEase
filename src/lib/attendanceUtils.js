@@ -79,7 +79,8 @@ export const exportToCSV = (dates, rollNumbers, getAttendanceStatus, calculatePe
 
 // Generate PDF
 export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks, pdfInfo) => {
-  const pdf = new jsPDF({
+  try {
+    const pdf = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
     format: 'a4'
@@ -195,6 +196,13 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
 
   const fileName = `Roll_Sheet_${classData.courseCode}_${classData.batch}.pdf`
   pdf.save(fileName)
+
+  console.log('PDF saved successfully')  // Debug log
+    
+  } catch (error) {
+    console.error('Error in generatePDF:', error)
+    throw error  // Re-throw to be caught by the component
+  }
 }
 
 // Open print dialog
