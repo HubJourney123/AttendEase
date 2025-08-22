@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import AttendanceHeader from './attendance/AttendanceHeader'
 import AttendanceTable from './attendance/AttendanceTable'
 import AttendanceLegend from './attendance/AttendanceLegend'
+import PDFInputModal from './PDFInputModal'
 import { 
   generateRollNumbers, 
   exportToCSV, 
@@ -13,11 +14,14 @@ import {
   calculateAttendanceMarks 
 } from '@/lib/attendanceUtils'
 
+
 export default function AttendanceSheet({ classData }) {
   const [dates, setDates] = useState(Array(24).fill(null))
   const [attendanceData, setAttendanceData] = useState({})
   const [loading, setLoading] = useState(true)
   const tableRef = useRef(null)
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false)
+  const [pdfInfo, setPDFInfo] = useState(null)
 
   const rollNumbers = generateRollNumbers(classData)
 
@@ -233,13 +237,22 @@ export default function AttendanceSheet({ classData }) {
     return { present, absent, late }
   }
 
+  const handlePrintPDF = () => {
+  setIsPDFModalOpen(true)
+}
+
+const handleGeneratePDF = (info) => {
+  setPDFInfo(info)
+  generatePDF(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks, info)
+  setIsPDFModalOpen(false)
+  toast.success('PDF generated successfully!')
+}
+
   const handleExportCSV = () => {
     exportToCSV(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, getDetailedStats, calculateAttendanceMarks)
   }
 
-  const handlePrintPDF = () => {
-    generatePDF(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks)
-  }
+  
 
   const handleBrowserPrint = () => {
     openPrintDialog(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks)
@@ -291,6 +304,13 @@ export default function AttendanceSheet({ classData }) {
           <div>&lt;60%: 0 marks</div>
         </div>
       </div>
+
+      <PDFInputModal
+        isOpen={isPDFModalOpen}
+        onClose={() => setIsPDFModalOpen(false)}
+        onGenerate={handleGeneratePDF}
+        classData={classData}
+      />
     </div>
   )
 }
