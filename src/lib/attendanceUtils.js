@@ -109,27 +109,18 @@ export const generatePDF = (
     );
 
     pdf.setFontSize(11);
-    pdf.setFont(undefined, "normal");
-    pdf.text(pdfInfo.department || "Department Name", pageWidth / 2, 17, {
-      align: "center",
-    });
-    pdf.text(
-      `${pdfInfo.year} ${pdfInfo.term} B. Sc. Engineering`,
-      pageWidth / 2,
-      22,
-      { align: "center" }
-    );
+    pdf.setFont(undefined, 'normal');
+    pdf.text(pdfInfo.department || 'Department Name', pageWidth / 2, 17, { align: 'center' });
+    pdf.text(`${pdfInfo.year} ${pdfInfo.term} B. Sc. Engineering`, pageWidth / 2, 22, { align: 'center' });
 
     pdf.setFontSize(9);
-    pdf.text("Session: _______________", 15, 28);
-    pdf.text(
-      `Starting Date: ${new Date().toLocaleDateString("en-GB")}`,
-      pageWidth - 55,
-      28
-    );
+    pdf.text('Session: _______________', 15, 25);
+    pdf.text(`Starting Date: ________________`, pageWidth - 50, 25);
+
+
 
     pdf.setFont(undefined, "bold");
-    pdf.text("Roll Sheet", pageWidth / 2, 33, { align: "center" });
+    pdf.text("Roll Sheet", pageWidth / 2, 28, { align: "center" });
     pdf.setFont(undefined, "normal");
 
     // ---------- TABLE SETTINGS ----------
