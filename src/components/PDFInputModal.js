@@ -11,7 +11,20 @@ export default function PDFInputModal({ isOpen, onClose, onGenerate, classData }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onGenerate(formData)
+    console.log('Form submitting...', formData)
+    
+    try {
+      onGenerate(formData)
+      console.log('PDF generation triggered')
+    } catch (error) {
+      console.error('Error in handleSubmit:', error)
+      alert('Failed to generate PDF: ' + error.message)
+    }
+  }
+
+  const handleCancel = () => {
+    console.log('Cancel clicked')
+    onClose()
   }
 
   if (!isOpen) return null
@@ -68,7 +81,7 @@ export default function PDFInputModal({ isOpen, onClose, onGenerate, classData }
           <div className="flex justify-end space-x-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCancel}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
             >
               Cancel
