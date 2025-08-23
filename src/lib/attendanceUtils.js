@@ -124,7 +124,7 @@ export const generatePDF = (
     pdf.setFont(undefined, "normal");
 
     // ---------- TABLE SETTINGS ----------
-    let startY = 38;
+    let startY = 32;
     const cellHeight = 5;
     const startX = 10;
 
