@@ -118,7 +118,6 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
       const lastThreeDigits = parseInt(roll.slice(-3))
       const lastTwoDigits = parseInt(roll.slice(-2))
       
-      // Check for 30, 60, 90, 120, 150, 180, etc.
       return (lastThreeDigits % 30 === 0 && lastThreeDigits > 0) || 
              (lastTwoDigits === 30 || lastTwoDigits === 60 || lastTwoDigits === 90)
     }
@@ -130,53 +129,76 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
     rollNumbers.forEach((roll, index) => {
       currentGroup.push({ roll, index })
       
-      // Break page if this roll should be last on page OR we've hit 30 students
       if (isPageBreakRoll(roll) || currentGroup.length >= 30) {
         pageGroups.push([...currentGroup])
         currentGroup = []
       }
     })
     
-    // Add remaining rolls if any
     if (currentGroup.length > 0) {
       pageGroups.push(currentGroup)
     }
     
     // Function to draw header
     const drawHeader = (yPos) => {
+      // Draw background for header row
       pdf.setFillColor(240, 240, 240)
+      pdf.setDrawColor(0, 0, 0)
+      pdf.setLineWidth(0.1)
       
       // Fixed columns
       pdf.rect(startX, yPos, 8, cellHeight, 'FD')
       pdf.rect(startX + 8, yPos, 18, cellHeight, 'FD')
       pdf.rect(startX + 26, yPos, 40, cellHeight, 'FD')
       
+      // Text for fixed columns
       pdf.setFontSize(8)
       pdf.setFont(undefined, 'bold')
+      pdf.setTextColor(0, 0, 0)
       pdf.text('SL.', startX + 4, yPos + 3.5, { align: 'center' })
       pdf.text('Roll No.', startX + 17, yPos + 3.5, { align: 'center' })
       pdf.text('Name of the Student', startX + 46, yPos + 3.5, { align: 'center' })
       
-      // Date columns
+      // Date columns - FIXED HERE
       let xPos = startX + 66
       const dateWidth = 9
       
+      // Draw date column headers with white background
       dates.forEach((date, index) => {
         if (date && index < 24) {
+          // Draw cell with white background
+          pdf.setFillColor(240, 240, 240)
           pdf.rect(xPos, yPos, dateWidth, cellHeight, 'FD')
+          
+          // Add date text
           pdf.setFontSize(6)
+          pdf.setTextColor(0, 0, 0)
           const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })
           pdf.text(dateStr, xPos + dateWidth/2, yPos + 3.5, { align: 'center' })
           xPos += dateWidth
         }
       })
       
+      // If less than 24 dates, fill remaining columns with empty cells
+      const remainingCols = 24 - dates.filter(d => d).length
+      for (let i = 0; i < remainingCols; i++) {
+        pdf.setFillColor(240, 240, 240)
+        pdf.rect(xPos, yPos, dateWidth, cellHeight, 'FD')
+        xPos += dateWidth
+      }
+      
       // % and Marks columns
+      pdf.setFillColor(240, 240, 240)
       pdf.rect(xPos, yPos, 10, cellHeight, 'FD')
       pdf.setFontSize(7)
+      pdf.setTextColor(0, 0, 0)
       pdf.text('%', xPos + 5, yPos + 3.5, { align: 'center' })
+      
       pdf.rect(xPos + 10, yPos, 12, cellHeight, 'FD')
       pdf.text('Marks', xPos + 16, yPos + 3.5, { align: 'center' })
+      
+      // Reset text color for body
+      pdf.setTextColor(0, 0, 0)
       
       return cellHeight
     }
@@ -193,6 +215,9 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
       
       // Draw rows for this page
       group.forEach(({ roll, index }) => {
+        // Set fill color to white for data cells
+        pdf.setFillColor(255, 255, 255)
+        
         // SL
         pdf.rect(startX, yPosition, 8, cellHeight)
         pdf.setFontSize(7)
@@ -209,6 +234,7 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
         let xPosRow = startX + 66
         const dateWidth = 9
         
+        // Draw attendance for existing dates
         dates.forEach((date, dateIndex) => {
           if (date && dateIndex < 24) {
             pdf.rect(xPosRow, yPosition, dateWidth, cellHeight)
@@ -220,6 +246,13 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
             xPosRow += dateWidth
           }
         })
+        
+        // Fill remaining columns if less than 24 dates
+        const remainingCols = 24 - dates.filter(d => d).length
+        for (let i = 0; i < remainingCols; i++) {
+          pdf.rect(xPosRow, yPosition, dateWidth, cellHeight)
+          xPosRow += dateWidth
+        }
         
         // Percentage
         const percentage = calculatePercentage(roll)
@@ -260,7 +293,6 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
     toast.error('Failed to generate PDF: ' + error.message)
   }
 }
-
 // Keep openPrintDialog as before
 export const openPrintDialog = (dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks) => {
   try {
