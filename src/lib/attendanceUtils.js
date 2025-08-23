@@ -249,7 +249,7 @@ export const generatePDF = (
 
       // ---------- FOOTER (last page only) ----------
       if (pageIndex === pageGroups.length - 1) {
-        const footerY = pageHeight - 25;
+        const footerY = pageHeight - 20;
 
         // Left side: course info
         pdf.setFontSize(9);
