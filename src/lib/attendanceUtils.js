@@ -124,7 +124,7 @@ export const generatePDF = (
     pdf.text("Session: _______________", 15, 28);
     pdf.text(
       `Starting Date: ${new Date().toLocaleDateString("en-GB")}`,
-      pageWidth - 50,
+      pageWidth - 55,
       28
     );
 
@@ -162,52 +162,63 @@ export const generatePDF = (
     if (currentGroup.length > 0) pageGroups.push(currentGroup);
 
   // ---------- DRAW HEADER ----------
+// ---------- DRAW HEADER ----------
 const drawHeader = (yPos) => {
-  // Light gray fill only for header
+  // Fixed columns background
   pdf.setFillColor(240, 240, 240);
+  pdf.setDrawColor(0, 0, 0);
 
-  // Fixed columns
+  // SL
   pdf.rect(startX, yPos, 8, cellHeight, "FD");
+  // Roll
   pdf.rect(startX + 8, yPos, 18, cellHeight, "FD");
+  // Name
   pdf.rect(startX + 26, yPos, 40, cellHeight, "FD");
 
   pdf.setFontSize(8);
   pdf.setFont(undefined, "bold");
+  pdf.setTextColor(0, 0, 0);
   pdf.text("SL.", startX + 4, yPos + 3.5, { align: "center" });
   pdf.text("Roll No.", startX + 17, yPos + 3.5, { align: "center" });
   pdf.text("Name of the Student", startX + 46, yPos + 3.5, { align: "center" });
 
-  // Dynamic date columns
+  // Date columns
   let xPos = startX + 66;
   const dateWidth = 9;
   validDates.forEach((date) => {
+    pdf.setFillColor(240, 240, 240); // gray background for header
     pdf.rect(xPos, yPos, dateWidth, cellHeight, "FD");
+
+    // Draw date text
     pdf.setFontSize(6);
+    pdf.setTextColor(0, 0, 0); // ensure black text
     const dateStr = date.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "2-digit",
     });
-    pdf.text(dateStr, xPos + dateWidth / 2, yPos + 3.5, {
-      align: "center",
-    });
+    pdf.text(dateStr, xPos + dateWidth / 2, yPos + 3.5, { align: "center" });
+
     xPos += dateWidth;
   });
 
-  // Percentage column
+  // % column
+  pdf.setFillColor(240, 240, 240);
   pdf.rect(xPos, yPos, 12, cellHeight, "FD");
   pdf.setFontSize(7);
+  pdf.setTextColor(0, 0, 0);
   pdf.text("%", xPos + 6, yPos + 3.5, { align: "center" });
 
-  // ✅ Reset fill color back to white for table body
+  // ✅ Reset fill & text colors for student rows
   pdf.setFillColor(255, 255, 255);
+  pdf.setTextColor(0, 0, 0);
 
   return cellHeight;
 };
 
 
-    // ---------- DRAW PAGES ----------
-    pageGroups.forEach((group, pageIndex) => {
-      if (pageIndex > 0) pdf.addPage();
+// ---------- DRAW PAGES ----------
+pageGroups.forEach((group, pageIndex) => {
+  if (pageIndex > 0) pdf.addPage();
 
       let yPosition = startY;
       yPosition += drawHeader(yPosition);
