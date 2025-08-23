@@ -161,46 +161,49 @@ export const generatePDF = (
 
     if (currentGroup.length > 0) pageGroups.push(currentGroup);
 
-    // ---------- DRAW HEADER ----------
-    const drawHeader = (yPos) => {
-      pdf.setFillColor(240, 240, 240);
+  // ---------- DRAW HEADER ----------
+const drawHeader = (yPos) => {
+  // Light gray fill only for header
+  pdf.setFillColor(240, 240, 240);
 
-      // Fixed columns
-      pdf.rect(startX, yPos, 8, cellHeight, "FD");
-      pdf.rect(startX + 8, yPos, 18, cellHeight, "FD");
-      pdf.rect(startX + 26, yPos, 40, cellHeight, "FD");
+  // Fixed columns
+  pdf.rect(startX, yPos, 8, cellHeight, "FD");
+  pdf.rect(startX + 8, yPos, 18, cellHeight, "FD");
+  pdf.rect(startX + 26, yPos, 40, cellHeight, "FD");
 
-      pdf.setFontSize(8);
-      pdf.setFont(undefined, "bold");
-      pdf.text("SL.", startX + 4, yPos + 3.5, { align: "center" });
-      pdf.text("Roll No.", startX + 17, yPos + 3.5, { align: "center" });
-      pdf.text("Name of the Student", startX + 46, yPos + 3.5, {
-        align: "center",
-      });
+  pdf.setFontSize(8);
+  pdf.setFont(undefined, "bold");
+  pdf.text("SL.", startX + 4, yPos + 3.5, { align: "center" });
+  pdf.text("Roll No.", startX + 17, yPos + 3.5, { align: "center" });
+  pdf.text("Name of the Student", startX + 46, yPos + 3.5, { align: "center" });
 
-      // Dynamic date columns
-      let xPos = startX + 66;
-      const dateWidth = 9;
-      validDates.forEach((date) => {
-        pdf.rect(xPos, yPos, dateWidth, cellHeight, "FD");
-        pdf.setFontSize(6);
-        const dateStr = date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-        });
-        pdf.text(dateStr, xPos + dateWidth / 2, yPos + 3.5, {
-          align: "center",
-        });
-        xPos += dateWidth;
-      });
+  // Dynamic date columns
+  let xPos = startX + 66;
+  const dateWidth = 9;
+  validDates.forEach((date) => {
+    pdf.rect(xPos, yPos, dateWidth, cellHeight, "FD");
+    pdf.setFontSize(6);
+    const dateStr = date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+    pdf.text(dateStr, xPos + dateWidth / 2, yPos + 3.5, {
+      align: "center",
+    });
+    xPos += dateWidth;
+  });
 
-      // ✅ Only Percentage (Marks removed)
-      pdf.rect(xPos, yPos, 12, cellHeight, "FD");
-      pdf.setFontSize(7);
-      pdf.text("%", xPos + 6, yPos + 3.5, { align: "center" });
+  // Percentage column
+  pdf.rect(xPos, yPos, 12, cellHeight, "FD");
+  pdf.setFontSize(7);
+  pdf.text("%", xPos + 6, yPos + 3.5, { align: "center" });
 
-      return cellHeight;
-    };
+  // ✅ Reset fill color back to white for table body
+  pdf.setFillColor(255, 255, 255);
+
+  return cellHeight;
+};
+
 
     // ---------- DRAW PAGES ----------
     pageGroups.forEach((group, pageIndex) => {
