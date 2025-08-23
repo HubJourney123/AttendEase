@@ -100,7 +100,7 @@ export const generatePDF = (
 
     // ---------- HEADER ----------
     pdf.setFontSize(14);
-    pdf.setFont(undefined, "bold");
+    pdf.setFont('times', "bold");
     pdf.text(
       "Khulna University of Engineering & Technology",
       pageWidth / 2,
@@ -109,19 +109,19 @@ export const generatePDF = (
     );
 
     pdf.setFontSize(11);
-    pdf.setFont(undefined, 'normal');
+    pdf.setFont('times', 'normal');
     pdf.text(pdfInfo.department || 'Department Name', pageWidth / 2, 17, { align: 'center' });
     pdf.text(`${pdfInfo.year} ${pdfInfo.term} B. Sc. Engineering`, pageWidth / 2, 22, { align: 'center' });
 
     pdf.setFontSize(9);
     pdf.text('Session: _______________', 15, 25);
-    pdf.text(`Starting Date: ________________`, pageWidth - 50, 25);
+    pdf.text(`Starting Date: ________________`, pageWidth - 60, 25);
 
 
 
-    pdf.setFont(undefined, "bold");
+    pdf.setFont('times', "bold");
     pdf.text("Roll Sheet", pageWidth / 2, 28, { align: "center" });
-    pdf.setFont(undefined, "normal");
+    pdf.setFont('times', "normal");
 
     // ---------- TABLE SETTINGS ----------
     let startY = 32;
@@ -167,7 +167,7 @@ const drawHeader = (yPos) => {
   pdf.rect(startX + 26, yPos, 40, cellHeight, "FD");
 
   pdf.setFontSize(8);
-  pdf.setFont(undefined, "bold");
+  pdf.setFont('times', "bold");
   pdf.setTextColor(0, 0, 0);
   pdf.text("SL.", startX + 4, yPos + 3.5, { align: "center" });
   pdf.text("Roll No.", startX + 17, yPos + 3.5, { align: "center" });
