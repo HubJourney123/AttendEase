@@ -90,130 +90,165 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
     
-    // University Header
-    pdf.setFontSize(16)
+    // Header
+    pdf.setFontSize(14)
     pdf.setFont(undefined, 'bold')
-    pdf.text('Khulna University of Engineering & Technology', pageWidth / 2, 15, { align: 'center' })
+    pdf.text('Khulna University of Engineering & Technology', pageWidth / 2, 12, { align: 'center' })
     
-    pdf.setFontSize(12)
+    pdf.setFontSize(11)
     pdf.setFont(undefined, 'normal')
-    pdf.text(pdfInfo.department || 'Department Name', pageWidth / 2, 22, { align: 'center' })
-    pdf.text(`${pdfInfo.year} ${pdfInfo.term} B. Sc. Engineering`, pageWidth / 2, 28, { align: 'center' })
+    pdf.text(pdfInfo.department || 'Department Name', pageWidth / 2, 17, { align: 'center' })
+    pdf.text(`${pdfInfo.year} ${pdfInfo.term} B. Sc. Engineering`, pageWidth / 2, 22, { align: 'center' })
 
-    // Session and Date Info
-    pdf.setFontSize(10)
-    pdf.text('Session: _______________', 15, 35)
-    pdf.text(`Starting Date: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 50, 35)
+    pdf.setFontSize(9)
+    pdf.text('Session: _______________', 15, 28)
+    pdf.text(`Starting Date: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 50, 28)
     
-    // Roll Sheet header
     pdf.setFont(undefined, 'bold')
-    pdf.text('Roll Sheet', pageWidth / 2, 40, { align: 'center' })
+    pdf.text('Roll Sheet', pageWidth / 2, 33, { align: 'center' })
     pdf.setFont(undefined, 'normal')
 
-    // Manual table creation as fallback
-    let yPosition = 50
-    const cellHeight = 6
+    // Table settings
+    let startY = 38
+    const cellHeight = 5
     const startX = 10
     
-    // Draw headers
-    pdf.setFillColor(240, 240, 240)
-    pdf.rect(startX, yPosition, 10, cellHeight, 'F')
-    pdf.rect(startX + 10, yPosition, 20, cellHeight, 'F')
-    pdf.rect(startX + 30, yPosition, 45, cellHeight, 'F')
+    // Function to check if roll should be last on page
+    const isPageBreakRoll = (roll) => {
+      const lastThreeDigits = parseInt(roll.slice(-3))
+      const lastTwoDigits = parseInt(roll.slice(-2))
+      
+      // Check for 30, 60, 90, 120, 150, 180, etc.
+      return (lastThreeDigits % 30 === 0 && lastThreeDigits > 0) || 
+             (lastTwoDigits === 30 || lastTwoDigits === 60 || lastTwoDigits === 90)
+    }
     
-    pdf.setFontSize(8)
-    pdf.setFont(undefined, 'bold')
-    pdf.text('SL.', startX + 5, yPosition + 4, { align: 'center' })
-    pdf.text('Roll No.', startX + 20, yPosition + 4, { align: 'center' })
-    pdf.text('Name of the Student', startX + 52, yPosition + 4, { align: 'center' })
+    // Group rolls by pages
+    const pageGroups = []
+    let currentGroup = []
     
-    // Date headers
-    let xPos = startX + 75
-    dates.forEach((date, index) => {
-      if (date && index < 20) { // Limit to prevent overflow
-        pdf.rect(xPos, yPosition, 10, cellHeight, 'F')
-        pdf.setFontSize(7)
-        pdf.text(date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }), xPos + 5, yPosition + 4, { align: 'center' })
-        xPos += 10
+    rollNumbers.forEach((roll, index) => {
+      currentGroup.push({ roll, index })
+      
+      // Break page if this roll should be last on page OR we've hit 30 students
+      if (isPageBreakRoll(roll) || currentGroup.length >= 30) {
+        pageGroups.push([...currentGroup])
+        currentGroup = []
       }
     })
     
-    // % and Marks headers
-    pdf.rect(xPos, yPosition, 12, cellHeight, 'F')
-    pdf.text('%', xPos + 6, yPosition + 4, { align: 'center' })
-    pdf.rect(xPos + 12, yPosition, 15, cellHeight, 'F')
-    pdf.text('Marks', xPos + 19, yPosition + 4, { align: 'center' })
+    // Add remaining rolls if any
+    if (currentGroup.length > 0) {
+      pageGroups.push(currentGroup)
+    }
     
-    // Draw table borders for headers
-    pdf.setDrawColor(0)
-    pdf.setLineWidth(0.1)
-    pdf.line(startX, yPosition, xPos + 27, yPosition)
-    pdf.line(startX, yPosition + cellHeight, xPos + 27, yPosition + cellHeight)
-    
-    yPosition += cellHeight
-    pdf.setFont(undefined, 'normal')
-    
-    // Draw rows
-    rollNumbers.forEach((roll, index) => {
-      if (yPosition > pageHeight - 30) {
-        pdf.addPage()
-        yPosition = 20
-      }
+    // Function to draw header
+    const drawHeader = (yPos) => {
+      pdf.setFillColor(240, 240, 240)
       
-      // SL
-      pdf.rect(startX, yPosition, 10, cellHeight)
-      pdf.text((index + 1).toString(), startX + 5, yPosition + 4, { align: 'center' })
+      // Fixed columns
+      pdf.rect(startX, yPos, 8, cellHeight, 'FD')
+      pdf.rect(startX + 8, yPos, 18, cellHeight, 'FD')
+      pdf.rect(startX + 26, yPos, 40, cellHeight, 'FD')
       
-      // Roll No
-      pdf.rect(startX + 10, yPosition, 20, cellHeight)
-      pdf.text(roll, startX + 20, yPosition + 4, { align: 'center' })
+      pdf.setFontSize(8)
+      pdf.setFont(undefined, 'bold')
+      pdf.text('SL.', startX + 4, yPos + 3.5, { align: 'center' })
+      pdf.text('Roll No.', startX + 17, yPos + 3.5, { align: 'center' })
+      pdf.text('Name of the Student', startX + 46, yPos + 3.5, { align: 'center' })
       
-      // Name (empty)
-      pdf.rect(startX + 30, yPosition, 45, cellHeight)
+      // Date columns
+      let xPos = startX + 66
+      const dateWidth = 9
       
-      // Attendance marks
-      let xPosRow = startX + 75
-      dates.forEach((date, dateIndex) => {
-        if (date && dateIndex < 20) {
-          pdf.rect(xPosRow, yPosition, 10, cellHeight)
-          const status = getAttendanceStatus(roll, dateIndex)
-          pdf.setFont(undefined, 'bold')
-          pdf.text(status, xPosRow + 5, yPosition + 4, { align: 'center' })
-          pdf.setFont(undefined, 'normal')
-          xPosRow += 10
+      dates.forEach((date, index) => {
+        if (date && index < 24) {
+          pdf.rect(xPos, yPos, dateWidth, cellHeight, 'FD')
+          pdf.setFontSize(6)
+          const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })
+          pdf.text(dateStr, xPos + dateWidth/2, yPos + 3.5, { align: 'center' })
+          xPos += dateWidth
         }
       })
       
-      // Percentage
-      const percentage = calculatePercentage(roll)
-      pdf.rect(xPosRow, yPosition, 12, cellHeight)
-      pdf.setFont(undefined, 'bold')
-      pdf.text(`${percentage}%`, xPosRow + 6, yPosition + 4, { align: 'center' })
+      // % and Marks columns
+      pdf.rect(xPos, yPos, 10, cellHeight, 'FD')
+      pdf.setFontSize(7)
+      pdf.text('%', xPos + 5, yPos + 3.5, { align: 'center' })
+      pdf.rect(xPos + 10, yPos, 12, cellHeight, 'FD')
+      pdf.text('Marks', xPos + 16, yPos + 3.5, { align: 'center' })
       
-      // Marks
-      const marks = calculateAttendanceMarks(parseFloat(percentage))
-      pdf.rect(xPosRow + 12, yPosition, 15, cellHeight)
-      pdf.text(marks.toString(), xPosRow + 19, yPosition + 4, { align: 'center' })
-      pdf.setFont(undefined, 'normal')
-      
-      yPosition += cellHeight
-    })
-    
-    // Footer
-    yPosition += 10
-    if (yPosition > pageHeight - 40) {
-      pdf.addPage()
-      yPosition = 20
+      return cellHeight
     }
     
-    pdf.setFontSize(10)
-    pdf.text(`Course Code: ${classData.courseCode}`, 15, yPosition)
-    pdf.text(`Course Title: ${classData.courseName}`, 15, yPosition + 5)
-    pdf.text(`Batch: ${classData.batch}`, 15, yPosition + 10)
-    
-    // Teacher signature line
-    pdf.line(15, yPosition + 25, 75, yPosition + 25)
-    pdf.text('Course Teacher', 35, yPosition + 30)
+    // Draw pages
+    pageGroups.forEach((group, pageIndex) => {
+      if (pageIndex > 0) {
+        pdf.addPage()
+      }
+      
+      let yPosition = startY
+      yPosition += drawHeader(yPosition)
+      pdf.setFont(undefined, 'normal')
+      
+      // Draw rows for this page
+      group.forEach(({ roll, index }) => {
+        // SL
+        pdf.rect(startX, yPosition, 8, cellHeight)
+        pdf.setFontSize(7)
+        pdf.text((index + 1).toString(), startX + 4, yPosition + 3.5, { align: 'center' })
+        
+        // Roll No
+        pdf.rect(startX + 8, yPosition, 18, cellHeight)
+        pdf.text(roll, startX + 17, yPosition + 3.5, { align: 'center' })
+        
+        // Name (empty)
+        pdf.rect(startX + 26, yPosition, 40, cellHeight)
+        
+        // Attendance marks
+        let xPosRow = startX + 66
+        const dateWidth = 9
+        
+        dates.forEach((date, dateIndex) => {
+          if (date && dateIndex < 24) {
+            pdf.rect(xPosRow, yPosition, dateWidth, cellHeight)
+            const status = getAttendanceStatus(roll, dateIndex)
+            pdf.setFont(undefined, 'bold')
+            pdf.setFontSize(7)
+            pdf.text(status, xPosRow + dateWidth/2, yPosition + 3.5, { align: 'center' })
+            pdf.setFont(undefined, 'normal')
+            xPosRow += dateWidth
+          }
+        })
+        
+        // Percentage
+        const percentage = calculatePercentage(roll)
+        pdf.rect(xPosRow, yPosition, 10, cellHeight)
+        pdf.setFont(undefined, 'bold')
+        pdf.setFontSize(7)
+        pdf.text(`${percentage}%`, xPosRow + 5, yPosition + 3.5, { align: 'center' })
+        
+        // Marks
+        const marks = calculateAttendanceMarks(parseFloat(percentage))
+        pdf.rect(xPosRow + 10, yPosition, 12, cellHeight)
+        pdf.text(marks.toString(), xPosRow + 16, yPosition + 3.5, { align: 'center' })
+        pdf.setFont(undefined, 'normal')
+        
+        yPosition += cellHeight
+      })
+      
+      // Footer on last page only
+      if (pageIndex === pageGroups.length - 1 && yPosition < pageHeight - 25) {
+        yPosition += 5
+        pdf.setFontSize(9)
+        pdf.text(`Course Code: ${classData.courseCode}`, 15, yPosition)
+        pdf.text(`Course Title: ${classData.courseName}`, 15, yPosition + 4)
+        pdf.text(`Batch: ${classData.batch}`, 15, yPosition + 8)
+        
+        pdf.line(15, yPosition + 18, 65, yPosition + 18)
+        pdf.text('Course Teacher', 32, yPosition + 22)
+      }
+    })
 
     // Save PDF
     const fileName = `Roll_Sheet_${classData.courseCode}_${classData.batch}.pdf`
