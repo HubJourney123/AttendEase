@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast'
 import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 import html2canvas from 'html2canvas'
 
 // Generate roll numbers
@@ -78,7 +78,7 @@ export const exportToCSV = (dates, rollNumbers, getAttendanceStatus, calculatePe
   }
 }
 
-// Generate PDF
+// Generate PDF - Alternative approach without autoTable
 export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks, pdfInfo) => {
   try {
     const pdf = new jsPDF({
@@ -87,8 +87,8 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
       format: 'a4'
     })
 
-    // Get page dimensions
     const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
     
     // University Header
     pdf.setFontSize(16)
@@ -110,101 +110,110 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
     pdf.text('Roll Sheet', pageWidth / 2, 40, { align: 'center' })
     pdf.setFont(undefined, 'normal')
 
-    // Prepare table headers
-    const headers = [['SL.', 'Roll No.', 'Name of the Student']]
+    // Manual table creation as fallback
+    let yPosition = 50
+    const cellHeight = 6
+    const startX = 10
     
-    // Add date columns
-    dates.forEach((date) => {
-      if (date) {
-        headers[0].push(date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }))
+    // Draw headers
+    pdf.setFillColor(240, 240, 240)
+    pdf.rect(startX, yPosition, 10, cellHeight, 'F')
+    pdf.rect(startX + 10, yPosition, 20, cellHeight, 'F')
+    pdf.rect(startX + 30, yPosition, 45, cellHeight, 'F')
+    
+    pdf.setFontSize(8)
+    pdf.setFont(undefined, 'bold')
+    pdf.text('SL.', startX + 5, yPosition + 4, { align: 'center' })
+    pdf.text('Roll No.', startX + 20, yPosition + 4, { align: 'center' })
+    pdf.text('Name of the Student', startX + 52, yPosition + 4, { align: 'center' })
+    
+    // Date headers
+    let xPos = startX + 75
+    dates.forEach((date, index) => {
+      if (date && index < 20) { // Limit to prevent overflow
+        pdf.rect(xPos, yPosition, 10, cellHeight, 'F')
+        pdf.setFontSize(7)
+        pdf.text(date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }), xPos + 5, yPosition + 4, { align: 'center' })
+        xPos += 10
       }
     })
-    headers[0].push('%', 'Marks')
-
-    // Prepare body rows
-    const body = []
+    
+    // % and Marks headers
+    pdf.rect(xPos, yPosition, 12, cellHeight, 'F')
+    pdf.text('%', xPos + 6, yPosition + 4, { align: 'center' })
+    pdf.rect(xPos + 12, yPosition, 15, cellHeight, 'F')
+    pdf.text('Marks', xPos + 19, yPosition + 4, { align: 'center' })
+    
+    // Draw table borders for headers
+    pdf.setDrawColor(0)
+    pdf.setLineWidth(0.1)
+    pdf.line(startX, yPosition, xPos + 27, yPosition)
+    pdf.line(startX, yPosition + cellHeight, xPos + 27, yPosition + cellHeight)
+    
+    yPosition += cellHeight
+    pdf.setFont(undefined, 'normal')
+    
+    // Draw rows
     rollNumbers.forEach((roll, index) => {
-      const row = [
-        (index + 1).toString(),
-        roll,
-        ''  // Empty name field
-      ]
+      if (yPosition > pageHeight - 30) {
+        pdf.addPage()
+        yPosition = 20
+      }
       
-      // Add attendance for each date
+      // SL
+      pdf.rect(startX, yPosition, 10, cellHeight)
+      pdf.text((index + 1).toString(), startX + 5, yPosition + 4, { align: 'center' })
+      
+      // Roll No
+      pdf.rect(startX + 10, yPosition, 20, cellHeight)
+      pdf.text(roll, startX + 20, yPosition + 4, { align: 'center' })
+      
+      // Name (empty)
+      pdf.rect(startX + 30, yPosition, 45, cellHeight)
+      
+      // Attendance marks
+      let xPosRow = startX + 75
       dates.forEach((date, dateIndex) => {
-        if (date) {
+        if (date && dateIndex < 20) {
+          pdf.rect(xPosRow, yPosition, 10, cellHeight)
           const status = getAttendanceStatus(roll, dateIndex)
-          row.push(status || '')
+          pdf.setFont(undefined, 'bold')
+          pdf.text(status, xPosRow + 5, yPosition + 4, { align: 'center' })
+          pdf.setFont(undefined, 'normal')
+          xPosRow += 10
         }
       })
       
-      // Add percentage and marks
+      // Percentage
       const percentage = calculatePercentage(roll)
-      const marks = calculateAttendanceMarks(parseFloat(percentage))
-      row.push(`${percentage}%`)
-      row.push(marks.toString())
+      pdf.rect(xPosRow, yPosition, 12, cellHeight)
+      pdf.setFont(undefined, 'bold')
+      pdf.text(`${percentage}%`, xPosRow + 6, yPosition + 4, { align: 'center' })
       
-      body.push(row)
+      // Marks
+      const marks = calculateAttendanceMarks(parseFloat(percentage))
+      pdf.rect(xPosRow + 12, yPosition, 15, cellHeight)
+      pdf.text(marks.toString(), xPosRow + 19, yPosition + 4, { align: 'center' })
+      pdf.setFont(undefined, 'normal')
+      
+      yPosition += cellHeight
     })
-
-    // Generate table
-    pdf.autoTable({
-      head: headers,
-      body: body,
-      startY: 45,
-      theme: 'grid',
-      styles: {
-        fontSize: 8,
-        cellPadding: 1,
-        lineColor: [0, 0, 0],
-        lineWidth: 0.1,
-        textColor: [0, 0, 0],
-        fontStyle: 'normal',
-        fillColor: [255, 255, 255]
-      },
-      headStyles: {
-        fillColor: [240, 240, 240],
-        textColor: [0, 0, 0],
-        fontStyle: 'bold',
-        halign: 'center'
-      },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 10 },   // SL
-        1: { halign: 'center', cellWidth: 20 },   // Roll No
-        2: { halign: 'left', cellWidth: 45 }      // Name
-      },
-      didParseCell: function(data) {
-        // Style for date columns
-        if (data.column.index >= 3 && data.column.index < headers[0].length - 2) {
-          data.cell.styles.halign = 'center'
-          data.cell.styles.cellWidth = 12
-          data.cell.styles.fontStyle = 'bold'
-        }
-        
-        // Style for percentage column
-        if (data.column.index === headers[0].length - 2) {
-          data.cell.styles.halign = 'center'
-          data.cell.styles.fontStyle = 'bold'
-        }
-        
-        // Style for marks column
-        if (data.column.index === headers[0].length - 1) {
-          data.cell.styles.halign = 'center'
-          data.cell.styles.fontStyle = 'bold'
-        }
-      }
-    })
-
+    
     // Footer
-    const finalY = pdf.lastAutoTable.finalY || 150
+    yPosition += 10
+    if (yPosition > pageHeight - 40) {
+      pdf.addPage()
+      yPosition = 20
+    }
+    
     pdf.setFontSize(10)
-    pdf.text(`Course Code: ${classData.courseCode}`, 15, finalY + 10)
-    pdf.text(`Course Title: ${classData.courseName}`, 15, finalY + 15)
-    pdf.text(`Batch: ${classData.batch}`, 15, finalY + 20)
+    pdf.text(`Course Code: ${classData.courseCode}`, 15, yPosition)
+    pdf.text(`Course Title: ${classData.courseName}`, 15, yPosition + 5)
+    pdf.text(`Batch: ${classData.batch}`, 15, yPosition + 10)
     
     // Teacher signature line
-    pdf.line(15, finalY + 35, 75, finalY + 35)
-    pdf.text('Course Teacher', 35, finalY + 40)
+    pdf.line(15, yPosition + 25, 75, yPosition + 25)
+    pdf.text('Course Teacher', 35, yPosition + 30)
 
     // Save PDF
     const fileName = `Roll_Sheet_${classData.courseCode}_${classData.batch}.pdf`
@@ -217,7 +226,7 @@ export const generatePDF = (dates, rollNumbers, getAttendanceStatus, calculatePe
   }
 }
 
-// Open print dialog
+// Keep openPrintDialog as before
 export const openPrintDialog = (dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks) => {
   try {
     const printWindow = window.open('', '_blank')
@@ -283,8 +292,8 @@ export const openPrintDialog = (dates, rollNumbers, getAttendanceStatus, calcula
       </head>
       <body>
         <h1>Khulna University of Engineering & Technology</h1>
-        <h2>Department of Computer Science and Engineering</h2>
-        <h2>B. Sc. Engineering</h2>
+        <h2>${pdfInfo?.department || 'Department of Computer Science and Engineering'}</h2>
+        <h2>${pdfInfo?.year || '3rd Year'} ${pdfInfo?.term || '1st Term'} B. Sc. Engineering</h2>
         <div class="info">
           <span>Session: _______________</span>
           <span>Roll Sheet</span>
