@@ -243,7 +243,7 @@ export default function AttendanceSheet({ classData }) {
 
 const handleGeneratePDF = (info) => {
   setPDFInfo(info)
-  generatePDF(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, calculateAttendanceMarks, info)
+  generatePDF(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, info)
   setIsPDFModalOpen(false)
   toast.success('PDF generated successfully!')
 }
