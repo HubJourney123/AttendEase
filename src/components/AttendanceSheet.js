@@ -237,6 +237,39 @@ export default function AttendanceSheet({ classData }) {
     return { present, absent, late }
   }
 
+  // Add this function to your AttendanceSheet component
+const handleDeleteColumn = async (index) => {
+  const dateToDelete = dates[index]
+  if (!dateToDelete) {
+    toast.error('No date to delete')
+    return
+  }
+
+  try {
+    // Delete from database
+    await deleteAttendanceByDate(dateToDelete)
+
+    // Update local state
+    const newDates = [...dates]
+    newDates[index] = null
+    setDates(newDates)
+
+    // Remove attendance data for this date
+    const dateKey = formatDateKey(dateToDelete)
+    const updatedAttendance = { ...attendanceData }
+    
+    rollNumbers.forEach(roll => {
+      delete updatedAttendance[`${roll}-${dateKey}`]
+    })
+    setAttendanceData(updatedAttendance)
+
+    toast.success('Column deleted successfully')
+  } catch (error) {
+    console.error('Error deleting column:', error)
+    toast.error('Failed to delete column')
+  }
+}
+
   const handlePrintPDF = () => {
   setIsPDFModalOpen(true)
 }
