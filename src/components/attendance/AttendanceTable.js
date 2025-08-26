@@ -9,12 +9,13 @@ const AttendanceTable = memo(({
   rollNumbers = [],
   attendanceData = {},
   onDateChange,
+  onEditDate,
   onDeleteColumn,
   onToggleAttendance,
   getAttendanceStatus,
   calculatePercentage,
   calculateAttendanceMarks,
-  getDetailedStats // Add this prop to get absent count
+  getDetailedStats
 }) => {
   // Handle empty rollNumbers case
   if (!rollNumbers.length) {
@@ -46,13 +47,14 @@ const AttendanceTable = memo(({
                 </div>
               </th>
 
-              {/* Scrollable Date Headers with Delete Functionality */}
+              {/* Scrollable Date Headers */}
               {safeDates.map((date, index) => (
                 <th key={index} className="border border-gray-300 dark:border-gray-600 px-1 py-1 dark:bg-gray-700 dark:text-gray-200 min-w-[65px] relative">
                   <DatePickerHeader
                     date={date}
                     index={index}
                     onDateChange={onDateChange}
+                    onEditDate={onEditDate}
                     onDeleteColumn={onDeleteColumn}
                   />
                 </th>
@@ -79,7 +81,7 @@ const AttendanceTable = memo(({
             {rollNumbers.map((roll) => {
               const percentage = parseFloat(calculatePercentage(roll)) || 0
               const marks = calculateAttendanceMarks(percentage) || 0
-              const stats = getDetailedStats(roll) // Get detailed stats including absent count
+              const stats = getDetailedStats(roll)
 
               return (
                 <tr key={roll} className="hover:bg-gray-50 dark:hover:bg-gray-600 group">
