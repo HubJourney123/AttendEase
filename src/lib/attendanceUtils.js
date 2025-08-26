@@ -85,7 +85,8 @@ export const generatePDF = (
   getAttendanceStatus,
   calculatePercentage,
   classData,
-  pdfInfo
+  pdfInfo,
+  getDetailedStats // Add this parameter to get absent count
 ) => {
   try {
     const pdf = new jsPDF({
@@ -188,6 +189,15 @@ export const generatePDF = (
         xPos += dateWidth;
       });
 
+      // Absent Column Header
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(xPos, yPos, 12, cellHeight, "FD");
+      pdf.setFontSize(7);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Absent", xPos + 6, yPos + 3.5, { align: "center" });
+      xPos += 12;
+
+      // Percentage Column Header
       pdf.setFillColor(240, 240, 240);
       pdf.rect(xPos, yPos, 12, cellHeight, "FD");
       pdf.setFontSize(7);
@@ -231,6 +241,17 @@ export const generatePDF = (
           xPosRow += dateWidth;
         });
 
+        // Get stats for absent count
+        const stats = getDetailedStats ? getDetailedStats(roll) : { absent: 0 };
+        
+        // Absent Count Cell
+        pdf.rect(xPosRow, yPosition, 12, cellHeight);
+        pdf.text(stats.absent.toString(), xPosRow + 6, yPosition + 3.5, {
+          align: "center",
+        });
+        xPosRow += 12;
+
+        // Percentage Cell
         const percentage = calculatePercentage(roll) || '0';
         pdf.rect(xPosRow, yPosition, 12, cellHeight);
         pdf.text(`${percentage}%`, xPosRow + 6, yPosition + 3.5, {

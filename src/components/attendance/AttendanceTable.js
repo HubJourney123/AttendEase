@@ -5,14 +5,16 @@ import DatePickerHeader from './DatePickerHeader'
 import AttendanceCell from './AttendanceCell'
 
 const AttendanceTable = memo(({
-  dates = [], // Default to empty array
-  rollNumbers = [], // Default to empty array
+  dates = [],
+  rollNumbers = [],
   attendanceData = {},
   onDateChange,
+  onDeleteColumn,
   onToggleAttendance,
   getAttendanceStatus,
   calculatePercentage,
-  calculateAttendanceMarks
+  calculateAttendanceMarks,
+  getDetailedStats // Add this prop to get absent count
 }) => {
   // Handle empty rollNumbers case
   if (!rollNumbers.length) {
@@ -43,35 +45,42 @@ const AttendanceTable = memo(({
                   Roll
                 </div>
               </th>
-              
-              {/* Scrollable Date Headers */}
+
+              {/* Scrollable Date Headers with Delete Functionality */}
               {safeDates.map((date, index) => (
-                <th key={index} className="border border-gray-300 dark:border-gray-600 px-1 py-1 dark:bg-gray-700 dark:text-gray-200 min-w-[65px]">
+                <th key={index} className="border border-gray-300 dark:border-gray-600 px-1 py-1 dark:bg-gray-700 dark:text-gray-200 min-w-[65px] relative">
                   <DatePickerHeader
                     date={date}
                     index={index}
                     onDateChange={onDateChange}
+                    onDeleteColumn={onDeleteColumn}
                   />
                 </th>
               ))}
-              
+
+              {/* Absent Column */}
+              <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 font-semibold bg-gray-100 dark:bg-gray-700 dark:text-gray-200 min-w-[60px]">
+                <div className="text-sm">Absent</div>
+              </th>
+
               {/* Percentage Column */}
               <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 font-semibold bg-gray-100 dark:bg-gray-700 dark:text-gray-200 min-w-[50px]">
                 <div className="text-sm">%</div>
               </th>
-              
+
               {/* Marks Column */}
               <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 font-semibold bg-gray-100 dark:bg-gray-700 dark:text-gray-200 min-w-[60px]">
                 <div className="text-sm">Marks</div>
               </th>
             </tr>
           </thead>
-          
+
           <tbody>
             {rollNumbers.map((roll) => {
               const percentage = parseFloat(calculatePercentage(roll)) || 0
               const marks = calculateAttendanceMarks(percentage) || 0
-              
+              const stats = getDetailedStats(roll) // Get detailed stats including absent count
+
               return (
                 <tr key={roll} className="hover:bg-gray-50 dark:hover:bg-gray-600 group">
                   {/* Fixed Roll Column */}
@@ -80,7 +89,7 @@ const AttendanceTable = memo(({
                       {roll}
                     </div>
                   </td>
-                  
+
                   {/* Scrollable Attendance Cells */}
                   {safeDates.map((_, index) => (
                     <AttendanceCell
@@ -92,19 +101,24 @@ const AttendanceTable = memo(({
                       onToggle={() => onToggleAttendance(roll, index)}
                     />
                   ))}
-                  
+
+                  {/* Absent Count Cell */}
+                  <td className="border border-gray-300 dark:border-gray-600 px-2 py-2 font-bold text-center bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">
+                    {stats.absent}
+                  </td>
+
                   {/* Percentage Cell */}
                   <td className="border border-gray-300 dark:border-gray-600 px-2 py-2 font-bold text-center bg-gray-50 dark:bg-gray-700 dark:text-gray-200 text-sm">
                     {percentage.toFixed(1)}%
                   </td>
-                  
+
                   {/* Marks Cell with color coding */}
                   <td className={`border border-gray-300 dark:border-gray-600 px-2 py-2 font-bold text-center text-sm
                     ${marks >= 90 ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
                       marks >= 70 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
                       marks >= 50 ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
                       'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'}`}>
-                    {marks}%
+                    {marks}
                   </td>
                 </tr>
               )

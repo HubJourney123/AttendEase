@@ -243,7 +243,7 @@ export default function AttendanceSheet({ classData }) {
 
 const handleGeneratePDF = (info) => {
   setPDFInfo(info)
-  generatePDF(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, info)
+  generatePDF(dates, rollNumbers, getAttendanceStatus, calculatePercentage, classData, info, getDetailedStats)
   setIsPDFModalOpen(false)
   toast.success('PDF generated successfully!')
 }
@@ -276,16 +276,19 @@ const handleGeneratePDF = (info) => {
         onBrowserPrint={handleBrowserPrint}
       />
       
+      
       <div ref={tableRef}>
         <AttendanceTable
           dates={dates}
           rollNumbers={rollNumbers}
           attendanceData={attendanceData}
           onDateChange={handleDateChange}
+          onDeleteColumn={handleDeleteColumn}
           onToggleAttendance={toggleAttendance}
           getAttendanceStatus={getAttendanceStatus}
           calculatePercentage={calculatePercentage}
           calculateAttendanceMarks={calculateAttendanceMarks}
+          getDetailedStats={getDetailedStats} // Add this line to pass the function
         />
       </div>
       
