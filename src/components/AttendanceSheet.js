@@ -113,32 +113,49 @@ export default function AttendanceSheet({ classData }) {
       return
     }
 
+    // Update local state immediately
     const newDates = [...dates]
     newDates[index] = date
     setDates(newDates)
 
-    // Save all students as present for this new date
-    for (const rollNumber of rollNumbers) {
-      await saveAttendance(rollNumber, date, 'P')
+    try {
+      // Save all students as present for this new date
+      const savePromises = rollNumbers.map(rollNumber => 
+        saveAttendance(rollNumber, date, 'P')
+      )
+      await Promise.all(savePromises)
+
+      // Update local attendance state
+      const newDateKey = formatDateKey(date)
+      const updatedAttendance = { ...attendanceData }
+      rollNumbers.forEach(roll => {
+        updatedAttendance[`${roll}-${newDateKey}`] = 'P'
+      })
+      setAttendanceData(updatedAttendance)
+
+      toast.success('Date added with all present', { duration: 1000 })
+    } catch (error) {
+      console.error('Error adding date:', error)
+      toast.error('Failed to add date')
+      // Revert local state on error
+      const revertDates = [...dates]
+      revertDates[index] = null
+      setDates(revertDates)
     }
-
-    // Update local state
-    const newDateKey = formatDateKey(date)
-    const updatedAttendance = { ...attendanceData }
-    rollNumbers.forEach(roll => {
-      updatedAttendance[`${roll}-${newDateKey}`] = 'P'
-    })
-    setAttendanceData(updatedAttendance)
-
-    toast.success('Date added with all present', { duration: 1000 })
   }
 
-  // Edit existing date (from modal)
+  // Edit existing date (from modal) - FIXED VERSION
   const handleEditDate = async (newDate, index) => {
     if (!newDate) return
 
     const newDateKey = formatDateKey(newDate)
     const oldDate = dates[index]
+    
+    if (!oldDate) {
+      toast.error('No existing date to edit')
+      return
+    }
+
     const oldDateKey = formatDateKey(oldDate)
 
     // Check if this date is already selected in another column
@@ -151,37 +168,60 @@ export default function AttendanceSheet({ classData }) {
       return
     }
 
-    try {
-      // Update attendance records in database
-      const updatedAttendance = { ...attendanceData }
+    // Update local state FIRST for immediate UI update
+    const newDates = [...dates]
+    newDates[index] = newDate
+    setDates(newDates)
 
-      // Transfer attendance data from old date to new date
-      for (const rollNumber of rollNumbers) {
-        const oldKey = `${rollNumber}-${oldDateKey}`
-        const newKey = `${rollNumber}-${newDateKey}`
-        const existingStatus = attendanceData[oldKey] || 'P'
-        
-        // Save to database with new date
-        await saveAttendance(rollNumber, newDate, existingStatus)
-        
-        // Update local state
-        updatedAttendance[newKey] = existingStatus
-        delete updatedAttendance[oldKey] // Remove old date data
-      }
-
-      // Delete old date from database
-      await deleteAttendanceByDate(oldDate)
+    // Update attendance data keys immediately
+    const updatedAttendance = { ...attendanceData }
+    
+    // Transfer all attendance data from old date key to new date key
+    rollNumbers.forEach(rollNumber => {
+      const oldKey = `${rollNumber}-${oldDateKey}`
+      const newKey = `${rollNumber}-${newDateKey}`
+      const existingStatus = attendanceData[oldKey] || 'P'
       
-      // Update dates array
-      const newDates = [...dates]
-      newDates[index] = newDate
-      setDates(newDates)
-      setAttendanceData(updatedAttendance)
+      updatedAttendance[newKey] = existingStatus
+      delete updatedAttendance[oldKey] // Remove old date data
+    })
+    
+    setAttendanceData(updatedAttendance)
+
+    try {
+      // Delete old date from database first
+      await deleteAttendanceByDate(oldDate)
+
+      // Save all attendance records with new date
+      const savePromises = rollNumbers.map(rollNumber => {
+        const oldKey = `${rollNumber}-${oldDateKey}`
+        const existingStatus = attendanceData[oldKey] || 'P'
+        return saveAttendance(rollNumber, newDate, existingStatus)
+      })
+      
+      await Promise.all(savePromises)
 
       toast.success('Date updated successfully')
     } catch (error) {
       console.error('Error updating date:', error)
       toast.error('Failed to update date')
+      
+      // Revert changes on error
+      const revertDates = [...dates]
+      revertDates[index] = oldDate
+      setDates(revertDates)
+      
+      // Revert attendance data
+      const revertAttendance = { ...attendanceData }
+      rollNumbers.forEach(rollNumber => {
+        const oldKey = `${rollNumber}-${oldDateKey}`
+        const newKey = `${rollNumber}-${newDateKey}`
+        const status = updatedAttendance[newKey]
+        
+        revertAttendance[oldKey] = status
+        delete revertAttendance[newKey]
+      })
+      setAttendanceData(revertAttendance)
     }
   }
 
@@ -236,6 +276,7 @@ export default function AttendanceSheet({ classData }) {
       }
     } catch (error) {
       console.error('Error saving attendance:', error)
+      throw error
     }
   }
 
