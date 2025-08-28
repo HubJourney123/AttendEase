@@ -1,3 +1,4 @@
+//src/app/api/classes/[id]/route.js
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"

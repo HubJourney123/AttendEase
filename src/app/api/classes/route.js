@@ -1,7 +1,10 @@
+// src/app/api/classes/route.js
+// src/app/api/classes/route.js
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { generateClassCode } from "@/lib/utils"
 
 export async function GET(request) {
   try {
@@ -73,6 +76,20 @@ export async function POST(request) {
       )
     }
 
+    // Generate unique class code
+    let classCode
+    let codeExists = true
+    
+    while (codeExists) {
+      classCode = generateClassCode()
+      const existing = await prisma.class.findFirst({
+        where: { classCode }
+      })
+      codeExists = !!existing
+    }
+
+    console.log('Generated unique class code:', classCode)
+
     const newClass = await prisma.class.create({
       data: {
         courseCode: body.courseCode,
@@ -81,6 +98,7 @@ export async function POST(request) {
         startingRoll: body.startingRoll,
         endingRoll: body.endingRoll,
         excludedRolls: body.excludedRolls || null,
+        classCode: classCode, // Add the generated class code
         userId: user.id
       }
     })

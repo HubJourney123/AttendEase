@@ -78,6 +78,35 @@ export const exportToCSV = (dates, rollNumbers, getAttendanceStatus, calculatePe
   }
 }
 
+// Add this to your lib/utils.js or create a new utility file
+
+export const generateClassCode = () => {
+  // Generate 6-character alphanumeric code (like Google Classroom)
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
+// Copy to clipboard utility
+export const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (err) {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+    return true
+  }
+}
+
 
 export const generatePDF = (
   dates,

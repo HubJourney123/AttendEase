@@ -63,6 +63,7 @@ model Class {
   startingRoll  String
   endingRoll    String
   excludedRolls String?
+  classCode     String?   @unique  // Add this line
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   attendance    Attendance[]
