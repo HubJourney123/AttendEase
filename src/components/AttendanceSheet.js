@@ -422,6 +422,7 @@ export default function AttendanceSheet({ classData }) {
         onExportCSV={handleExportCSV}
         onPrint={handlePrintPDF}
         onBrowserPrint={handleBrowserPrint}
+        onOpenCalculator={() => setIsCalculatorModalOpen(true)} // Add this line
       />
 
       <div ref={tableRef}>
