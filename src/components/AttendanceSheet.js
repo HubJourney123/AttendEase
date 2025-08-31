@@ -102,7 +102,6 @@ export default function AttendanceSheet({ classData }) {
 
 
 
-// Add this function for handling calculator submissions
 const handleCalculatorSubmit = async (calculatorData) => {
   try {
     toast.loading('Fetching partner class data...')
@@ -121,12 +120,65 @@ const handleCalculatorSubmit = async (calculatorData) => {
     // Get current class attendance data
     const currentAttendance = Object.entries(attendanceData)
 
-    // Combine attendance data logic here...
-    // (Use the logic from the previous AttendanceSheet artifact)
+    // Create combined attendance map
+    const combinedAttendanceMap = new Map()
+
+    // Initialize all roll numbers with zero absents
+    rollNumbers.forEach(rollNumber => {
+      combinedAttendanceMap.set(rollNumber, {
+        rollNumber,
+        name: '',
+        absents: 0
+      })
+    })
+
+    // Count absents from current class
+    currentAttendance.forEach(([key, status]) => {
+      const [rollNumber] = key.split('-')
+      if (status === 'A' && combinedAttendanceMap.has(rollNumber)) {
+        combinedAttendanceMap.get(rollNumber).absents += 1
+      }
+    })
+
+    // Count absents from partner class
+    partnerAttendance.forEach(record => {
+      if (record.status === 'A') {
+        const rollNumber = record.rollNumber
+        if (combinedAttendanceMap.has(rollNumber)) {
+          combinedAttendanceMap.get(rollNumber).absents += 1
+        } else {
+          // Add new roll number if not in current class
+          combinedAttendanceMap.set(rollNumber, {
+            rollNumber,
+            name: '',
+            absents: 1
+          })
+        }
+      }
+    })
+
+    // Convert to sorted array
+    const combinedData = Array.from(combinedAttendanceMap.values())
+      .sort((a, b) => a.rollNumber.localeCompare(b.rollNumber))
+      .map(student => ({
+        rollNumber: student.rollNumber,
+        name: student.name,
+        totalAbsent: student.absents
+      }))
 
     toast.dismiss()
+    
     // Generate PDF with combined data
-    generateCombinedAttendancePDF(combinedData, classData, calculatorData.department, calculatorData.totalClasses)
+    generateCombinedAttendancePDF(
+      combinedData, 
+      {
+        courseCode: classData.courseCode,
+        courseName: classData.courseName,
+        batch: classData.batch
+      }, 
+      calculatorData.department, 
+      calculatorData.totalClasses
+    )
 
   } catch (error) {
     toast.dismiss()
@@ -134,7 +186,6 @@ const handleCalculatorSubmit = async (calculatorData) => {
     toast.error(error.message || 'Failed to generate combined report')
   }
 }
-
 
 
   // Add new date (for empty columns)
