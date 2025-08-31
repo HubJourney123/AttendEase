@@ -17,44 +17,55 @@ export const generateCombinedAttendancePDF = (
     });
 
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
     let currentY = 20;
 
-    // Helper function to add new page with header
-    const addNewPage = () => {
-      pdf.addPage();
-      currentY = 20;
-      drawHeader();
+    // Department mapping from Bangla to English
+    const departmentMapping = {
+      'কম্পিউটার বিজ্ঞান ও প্রকৌশল': 'Department of Computer Science and Engineering',
+      'ইলেকট্রিক্যাল ও ইলেকট্রনিক প্রকৌশল': 'Department of Electrical and Electronic Engineering',
+      'মেকানিক্যাল প্রকৌশল': 'Department of Mechanical Engineering',
+      'সিভিল প্রকৌশল': 'Department of Civil Engineering',
+      'ইন্ডাস্ট্রিয়াল প্রকৌশল ও ব্যবস্থাপনা': 'Department of Industrial Engineering and Management',
+      'কেমিক্যাল প্রকৌশল': 'Department of Chemical Engineering',
+      'ম্যাটেরিয়ালস সায়েন্স অ্যান্ড ইঞ্জিনিয়ারিং': 'Department of Materials Science and Engineering',
+      'বায়োমেডিক্যাল ইঞ্জিনিয়ারিং': 'Department of Biomedical Engineering',
+      'আর্কিটেকচার': 'Department of Architecture',
+      'আরবান অ্যান্ড রিজিওনাল প্ল্যানিং': 'Department of Urban and Regional Planning',
+      'বিল্ডিং ইঞ্জিনিয়ারিং অ্যান্ড কন্সট্রাকশন ম্যানেজমেন্ট': 'Department of Building Engineering and Construction Management',
+      'ইলেকট্রনিক্স অ্যান্ড কমিউনিকেশন ইঞ্জিনিয়ারিং': 'Department of Electronics and Communication Engineering',
+      'টেক্সটাইল ইঞ্জিনিয়ারিং': 'Department of Textile Engineering',
+      'লেদার ইঞ্জিনিয়ারিং': 'Department of Leather Engineering',
+      'ফুড টেকনোলজি অ্যান্ড রুরাল ইন্ডাস্ট্রিজ': 'Department of Food Technology and Rural Industries',
+      'এনার্জি সায়েন্স অ্যান্ড ইঞ্জিনিয়ারিং': 'Department of Energy Science and Engineering',
+      'ম্যাথ অ্যান্ড ফিজিক্যাল সায়েন্সেস': 'Department of Math and Physical Sciences',
+      'কেমিস্ট্রি': 'Department of Chemistry',
+      'হিউম্যানিটিজ': 'Department of Humanities'
     };
 
-    // Header function with Bengali text
-    const drawHeader = () => {
-      // University name in Bengali
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('খুলনা প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয়', pageWidth / 2, currentY, { align: 'center' });
-      currentY += 8;
+    const departmentEnglish = departmentMapping[departmentBangla] || departmentBangla;
 
-      // Department name in Bengali (from user selection)
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(departmentBangla, pageWidth / 2, currentY, { align: 'center' });
-      currentY += 10;
+    // Header
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Khulna University of Engineering & Technology', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 8;
 
-      // Course details
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'normal');
-      const courseText = `Course No: ${courseInfo.courseCode || 'N/A'}    Title of the Course: ${courseInfo.courseName || 'N/A'}`;
-      pdf.text(courseText, pageWidth / 2, currentY, { align: 'center' });
-      currentY += 6;
+    // Department name in English
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(departmentEnglish, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 10;
 
-      pdf.setFontSize(10);
-      pdf.text(`Batch: ${courseInfo.batch || 'N/A'}`, pageWidth / 2, currentY, { align: 'center' });
-      currentY += 15;
-    };
+    // Course details
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    const courseText = `Course No: ${courseInfo.courseCode || 'N/A'}    Title of the Course: ${courseInfo.courseName || 'N/A'}`;
+    pdf.text(courseText, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 6;
 
-    // Initial header
-    drawHeader();
+    pdf.setFontSize(10);
+    pdf.text(`Batch: ${courseInfo.batch || 'N/A'}`, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 15;
 
     // Prepare table data
     const tableData = [];
@@ -67,94 +78,87 @@ export const generateCombinedAttendancePDF = (
       tableData.push([
         slNo++,
         student.rollNumber,
-        student.name || '', // Name column (empty as per image requirement)
+        student.name || '', // Name column (empty as per requirement)
         totalAttendance, // Total number of attendance (present classes)
         `${attendancePercentage}%`
       ]);
     });
 
-    // Split data into pages (30 students per page)
-    const studentsPerPage = 30;
-    const totalPages = Math.ceil(tableData.length / studentsPerPage);
+    // Calculate if all data can fit on one page
+    const maxRowsPerPage = Math.floor((297 - currentY - 40) / 6); // A4 height - header - footer, 6mm per row
+    const actualRows = Math.min(tableData.length, maxRowsPerPage);
 
-    for (let page = 0; page < totalPages; page++) {
-      if (page > 0) addNewPage();
-
-      const startIndex = page * studentsPerPage;
-      const endIndex = Math.min(startIndex + studentsPerPage, tableData.length);
-      const pageData = tableData.slice(startIndex, endIndex);
-
-      // Create table with autoTable
-      autoTable(pdf, {
-        startY: currentY,
-        head: [[
-          'SL. No.',
-          'Roll No.',
-          'Name of the student',
-          'Total Number of Attendance',
-          'Percentage of Attendance'
-        ]],
-        body: pageData,
-        theme: 'grid',
-        styles: {
-          fontSize: 9,
-          cellPadding: 3,
-          halign: 'center',
-          valign: 'middle',
-          lineWidth: 0.1,
-          lineColor: [0, 0, 0]
-        },
-        headStyles: {
-          fillColor: [240, 240, 240],
-          textColor: [0, 0, 0],
-          fontStyle: 'bold',
-          halign: 'center',
-          fontSize: 9
-        },
-        columnStyles: {
-          0: { halign: 'center', cellWidth: 20 },  // SL No
-          1: { halign: 'center', cellWidth: 25 },  // Roll No
-          2: { halign: 'left', cellWidth: 80 },    // Name (wider for empty space)
-          3: { halign: 'center', cellWidth: 35 },  // Total Attendance
-          4: { halign: 'center', cellWidth: 30 }   // Percentage
-        },
-        didParseCell: function(data) {
-          // Gray out rows with less than 60% attendance
-          if (data.section === 'body') {
-            const rowData = pageData[data.row.index];
-            const percentage = parseFloat(rowData[4].replace('%', ''));
-            if (percentage < 60) {
-              data.cell.styles.fillColor = [220, 220, 220]; // Light gray background
-              data.cell.styles.textColor = [80, 80, 80]; // Darker gray text
-            }
+    // Create single-page table
+    autoTable(pdf, {
+      startY: currentY,
+      head: [[
+        'SL. No.',
+        'Roll No.',
+        'Name of the student',
+        'Total Number of Attendance',
+        'Percentage of Attendance'
+      ]],
+      body: tableData.slice(0, actualRows), // Show only rows that fit
+      theme: 'grid',
+      styles: {
+        fontSize: Math.min(9, Math.max(6, 180 / tableData.length)), // Dynamic font size
+        cellPadding: 2,
+        halign: 'center',
+        valign: 'middle',
+        lineWidth: 0.1,
+        lineColor: [0, 0, 0]
+      },
+      headStyles: {
+        fillColor: [240, 240, 240],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        halign: 'center',
+        fontSize: Math.min(9, Math.max(6, 180 / tableData.length))
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 20 },  // SL No
+        1: { halign: 'center', cellWidth: 25 },  // Roll No
+        2: { halign: 'left', cellWidth: 80 },    // Name
+        3: { halign: 'center', cellWidth: 35 },  // Total Attendance
+        4: { halign: 'center', cellWidth: 30 }   // Percentage
+      },
+      didParseCell: function(data) {
+        // Gray out rows with less than 60% attendance
+        if (data.section === 'body') {
+          const rowData = tableData[data.row.index];
+          const percentage = parseFloat(rowData[4].replace('%', ''));
+          if (percentage < 60) {
+            data.cell.styles.fillColor = [220, 220, 220]; // Light gray background
+            data.cell.styles.textColor = [80, 80, 80]; // Darker gray text
           }
-        },
-        margin: { top: 10, left: 15, right: 15 },
-        tableWidth: 'auto',
-        pageBreak: 'avoid'
-      });
+        }
+      },
+      margin: { top: 10, left: 15, right: 15 },
+      tableWidth: 'auto',
+      pageBreak: 'avoid'
+    });
 
-      // Add teacher signature section
-      const isLastPage = page === totalPages - 1;
-      const hasFullPage = pageData.length >= 30;
-      
-      // Add signatures on last page OR when page has 30 students
-      if (isLastPage || hasFullPage) {
-        const finalY = pdf.lastAutoTable.finalY || currentY + 100;
-        const signatureY = Math.min(finalY + 30, pageHeight - 40);
-        
-        // Teacher signature section
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text('Teacher\'s Name & Signature', 15, signatureY);
-        
-        // Two signature lines for two teachers
-        pdf.text('(1)', 15, signatureY + 15);
-        pdf.line(25, signatureY + 13, 85, signatureY + 13); // First signature line
-        
-        pdf.text('(2)', 15, signatureY + 25);
-        pdf.line(25, signatureY + 23, 85, signatureY + 23); // Second signature line
-      }
+    // Add teacher signature section
+    const finalY = pdf.lastAutoTable.finalY || currentY + 100;
+    const signatureY = Math.max(finalY + 20, 250); // Ensure enough space
+    
+    // Teacher signature section
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Teacher\'s Name & Signature', 15, signatureY);
+    
+    // Two signature lines for two teachers
+    pdf.text('(1)', 15, signatureY + 15);
+    pdf.line(25, signatureY + 13, 85, signatureY + 13); // First signature line
+    
+    pdf.text('(2)', 15, signatureY + 25);
+    pdf.line(25, signatureY + 23, 85, signatureY + 23); // Second signature line
+
+    // Warning if data was truncated
+    if (tableData.length > actualRows) {
+      pdf.setFontSize(8);
+      pdf.setTextColor(255, 0, 0); // Red text
+      pdf.text(`Note: Showing first ${actualRows} of ${tableData.length} students to fit on single page`, 15, signatureY + 35);
     }
 
     // Generate filename with timestamp
