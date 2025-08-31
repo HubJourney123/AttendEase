@@ -504,13 +504,15 @@ const handleCalculatorSubmit = async (calculatorData) => {
         classData={classData}
       />
 
-      // Add the modal to your JSX at the bottom:
-<AttendanceCalculatorModal
-  isOpen={isCalculatorModalOpen}
-  onClose={() => setIsCalculatorModalOpen(false)}
-  onCalculate={handleCalculatorSubmit}
-  currentClassCode={classData.classCode}
-/>
+      {/* Add the modal to your JSX at the bottom: */}
+      <AttendanceCalculatorModal
+        isOpen={isCalculatorModalOpen}
+        onClose={() => setIsCalculatorModalOpen(false)}
+        onCalculate={handleCalculatorSubmit}
+        currentClassCode={classData.classCode}
+      />
+
+
     </div>
   )
 }
