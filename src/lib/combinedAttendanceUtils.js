@@ -46,26 +46,26 @@ export const generateCombinedAttendancePDF = (
 
     // Header
     pdf.setFontSize(16);
-    pdf.setFont('helvetica', 'bold');
+    pdf.setFont('times', 'bold');
     pdf.text('Khulna University of Engineering & Technology', pageWidth / 2, currentY, { align: 'center' });
     currentY += 8;
 
     // Department name in English
     pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont('times', 'normal');
     pdf.text(departmentEnglish, pageWidth / 2, currentY, { align: 'center' });
     currentY += 10;
 
     // Course details
     pdf.setFontSize(11);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont('times', 'normal');
     const courseText = `Course No: ${courseInfo.courseCode || 'N/A'}    Title of the Course: ${courseInfo.courseName || 'N/A'}`;
     pdf.text(courseText, pageWidth / 2, currentY, { align: 'center' });
     currentY += 6;
 
     pdf.setFontSize(10);
     pdf.text(`Batch: ${courseInfo.batch || 'N/A'}`, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 15;
+    currentY += 10;
 
     // Prepare table data
     const tableData = [];
@@ -101,7 +101,7 @@ export const generateCombinedAttendancePDF = (
       body: tableData.slice(0, actualRows), // Show only rows that fit
       theme: 'grid',
       styles: {
-        fontSize: Math.min(9, Math.max(6, 180 / tableData.length)), // Dynamic font size
+        fontSize: Math.min(10, Math.max(6, 180 / tableData.length)), // Dynamic font size
         cellPadding: 2,
         halign: 'center',
         valign: 'middle',
@@ -113,12 +113,12 @@ export const generateCombinedAttendancePDF = (
         textColor: [0, 0, 0],
         fontStyle: 'bold',
         halign: 'center',
-        fontSize: Math.min(9, Math.max(6, 180 / tableData.length))
+        fontSize: Math.min(10, Math.max(6, 180 / tableData.length))
       },
       columnStyles: {
         0: { halign: 'center', cellWidth: 20 },  // SL No
         1: { halign: 'center', cellWidth: 25 },  // Roll No
-        2: { halign: 'left', cellWidth: 80 },    // Name
+        2: { halign: 'left', cellWidth: 60 },    // Name
         3: { halign: 'center', cellWidth: 35 },  // Total Attendance
         4: { halign: 'center', cellWidth: 30 }   // Percentage
       },
@@ -140,18 +140,18 @@ export const generateCombinedAttendancePDF = (
 
     // Add teacher signature section
     const finalY = pdf.lastAutoTable.finalY || currentY + 100;
-    const signatureY = Math.max(finalY + 20, 250); // Ensure enough space
+    const signatureY = Math.max(finalY + 10, 250); // Ensure enough space
     
     // Teacher signature section
     pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont('times', 'normal');
     pdf.text('Teacher\'s Name & Signature', 15, signatureY);
     
     // Two signature lines for two teachers
-    pdf.text('(1)', 15, signatureY + 15);
+    pdf.text('(1)', 15, signatureY + 10);
     pdf.line(25, signatureY + 13, 85, signatureY + 13); // First signature line
     
-    pdf.text('(2)', 15, signatureY + 25);
+    pdf.text('(2)', 15, signatureY + 20);
     pdf.line(25, signatureY + 23, 85, signatureY + 23); // Second signature line
 
     // Warning if data was truncated
