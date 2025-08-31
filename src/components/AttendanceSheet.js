@@ -117,6 +117,26 @@ const handleCalculatorSubmit = async (calculatorData) => {
     const attendanceResponse = await fetch(`/api/attendance?classId=${partnerClass.id}`)
     const partnerAttendance = await attendanceResponse.json()
 
+    // Generate sequential roll numbers from BOTH classes
+    const allRollNumbers = new Set()
+    
+    // Add roll numbers from current class
+    rollNumbers.forEach(roll => allRollNumbers.add(roll))
+    
+    // Add roll numbers from partner class attendance
+    partnerAttendance.forEach(record => allRollNumbers.add(record.rollNumber))
+    
+    // Convert to sorted array for sequential order
+    const sortedRollNumbers = Array.from(allRollNumbers).sort((a, b) => {
+      // Sort numerically if possible, otherwise alphabetically
+      const numA = parseInt(a)
+      const numB = parseInt(b)
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB
+      }
+      return a.localeCompare(b)
+    })
+
     // Get current class attendance data
     const currentAttendance = Object.entries(attendanceData)
 
@@ -124,7 +144,7 @@ const handleCalculatorSubmit = async (calculatorData) => {
     const combinedAttendanceMap = new Map()
 
     // Initialize all roll numbers with zero absents
-    rollNumbers.forEach(rollNumber => {
+    sortedRollNumbers.forEach(rollNumber => {
       combinedAttendanceMap.set(rollNumber, {
         rollNumber,
         name: '',
@@ -146,20 +166,12 @@ const handleCalculatorSubmit = async (calculatorData) => {
         const rollNumber = record.rollNumber
         if (combinedAttendanceMap.has(rollNumber)) {
           combinedAttendanceMap.get(rollNumber).absents += 1
-        } else {
-          // Add new roll number if not in current class
-          combinedAttendanceMap.set(rollNumber, {
-            rollNumber,
-            name: '',
-            absents: 1
-          })
         }
       }
     })
 
-    // Convert to sorted array
+    // Convert to final sorted array
     const combinedData = Array.from(combinedAttendanceMap.values())
-      .sort((a, b) => a.rollNumber.localeCompare(b.rollNumber))
       .map(student => ({
         rollNumber: student.rollNumber,
         name: student.name,
