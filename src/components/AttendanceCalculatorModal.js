@@ -109,7 +109,7 @@ export default function AttendanceCalculatorModal({
               maxLength={6}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Enter the 6-character class code of the partner teacher's class
+              Enter the 6-character class code of the partner teacher&apos;s class
             </p>
           </div>
 
