@@ -23,6 +23,7 @@ export default function AttendanceSheet({ classData }) {
   const tableRef = useRef(null)
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false)
   const [pdfInfo, setPDFInfo] = useState(null)
+  const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false)
 
   const rollNumbers = generateRollNumbers(classData)
 
@@ -99,8 +100,7 @@ export default function AttendanceSheet({ classData }) {
     }
   }
 
-  // Add this state variable
-const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false)
+
 
 // Add this function for handling calculator submissions
 const handleCalculatorSubmit = async (calculatorData) => {
@@ -135,13 +135,7 @@ const handleCalculatorSubmit = async (calculatorData) => {
   }
 }
 
-// Add the modal to your JSX at the bottom:
-<AttendanceCalculatorModal
-  isOpen={isCalculatorModalOpen}
-  onClose={() => setIsCalculatorModalOpen(false)}
-  onCalculate={handleCalculatorSubmit}
-  currentClassCode={classData.classCode}
-/>
+
 
   // Add new date (for empty columns)
   const handleDateChange = async (date, index) => {
@@ -509,6 +503,14 @@ const handleCalculatorSubmit = async (calculatorData) => {
         onGenerate={handleGeneratePDF}
         classData={classData}
       />
+
+      // Add the modal to your JSX at the bottom:
+<AttendanceCalculatorModal
+  isOpen={isCalculatorModalOpen}
+  onClose={() => setIsCalculatorModalOpen(false)}
+  onCalculate={handleCalculatorSubmit}
+  currentClassCode={classData.classCode}
+/>
     </div>
   )
 }
