@@ -5,6 +5,8 @@ import toast from 'react-hot-toast'
 import AttendanceHeader from './attendance/AttendanceHeader'
 import AttendanceTable from './attendance/AttendanceTable'
 import AttendanceLegend from './attendance/AttendanceLegend'
+import AttendanceCalculatorModal from './AttendanceCalculatorModal'
+import { generateCombinedAttendancePDF } from '@/lib/combinedAttendanceUtils'
 import PDFInputModal from './PDFInputModal'
 import { 
   generateRollNumbers, 
@@ -96,6 +98,50 @@ export default function AttendanceSheet({ classData }) {
       throw error
     }
   }
+
+  // Add this state variable
+const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false)
+
+// Add this function for handling calculator submissions
+const handleCalculatorSubmit = async (calculatorData) => {
+  try {
+    toast.loading('Fetching partner class data...')
+
+    // Fetch partner class data
+    const response = await fetch(`/api/classes/by-code?code=${calculatorData.partnerClassCode}`)
+    if (!response.ok) {
+      throw new Error('Partner class not found')
+    }
+    const partnerClass = await response.json()
+
+    // Fetch partner class attendance
+    const attendanceResponse = await fetch(`/api/attendance?classId=${partnerClass.id}`)
+    const partnerAttendance = await attendanceResponse.json()
+
+    // Get current class attendance data
+    const currentAttendance = Object.entries(attendanceData)
+
+    // Combine attendance data logic here...
+    // (Use the logic from the previous AttendanceSheet artifact)
+
+    toast.dismiss()
+    // Generate PDF with combined data
+    generateCombinedAttendancePDF(combinedData, classData, calculatorData.department, calculatorData.totalClasses)
+
+  } catch (error) {
+    toast.dismiss()
+    console.error('Calculator error:', error)
+    toast.error(error.message || 'Failed to generate combined report')
+  }
+}
+
+// Add the modal to your JSX at the bottom:
+<AttendanceCalculatorModal
+  isOpen={isCalculatorModalOpen}
+  onClose={() => setIsCalculatorModalOpen(false)}
+  onCalculate={handleCalculatorSubmit}
+  currentClassCode={classData.classCode}
+/>
 
   // Add new date (for empty columns)
   const handleDateChange = async (date, index) => {
