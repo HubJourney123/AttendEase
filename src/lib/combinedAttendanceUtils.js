@@ -63,7 +63,7 @@ export const generateCombinedAttendancePDF = (
     pdf.text(courseText, pageWidth / 2, currentY, { align: 'center' });
     currentY += 6;
 
-    pdf.setFontSize(12);
+    pdf.setFontSize(11);
     pdf.text(`Batch: ${courseInfo.batch || 'N/A'}`, pageWidth / 2, currentY, { align: 'center' });
     currentY += 10;
 
@@ -101,7 +101,7 @@ export const generateCombinedAttendancePDF = (
       body: tableData.slice(0, actualRows), // Show only rows that fit
       theme: 'grid',
       styles: {
-        fontSize: Math.min(12, Math.max(12, 180 / tableData.length)), // Dynamic font size
+        fontSize: Math.min(11, Math.max(11, 180 / tableData.length)), // Dynamic font size
         cellPadding: 2,
         halign: 'center',
         valign: 'middle',
@@ -113,7 +113,7 @@ export const generateCombinedAttendancePDF = (
         textColor: [0, 0, 0],
         fontStyle: 'bold',
         halign: 'center',
-        fontSize: Math.min(12, Math.max(12, 180 / tableData.length))
+        fontSize: Math.min(11, Math.max(11, 180 / tableData.length))
       },
       columnStyles: {
         0: { halign: 'center', cellWidth: 20 },  // SL No
@@ -156,7 +156,7 @@ export const generateCombinedAttendancePDF = (
 
     // Warning if data was truncated
     if (tableData.length > actualRows) {
-      pdf.setFontSize(12);
+      pdf.setFontSize(11);
       pdf.setTextColor(255, 0, 0); // Red text
       pdf.text(`Note: Showing first ${actualRows} of ${tableData.length} students to fit on single page`, 15, signatureY + 35);
     }
