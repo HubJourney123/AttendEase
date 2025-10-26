@@ -57,13 +57,13 @@ export const generateCombinedAttendancePDF = (
     currentY += 10;
 
     // Course details
-    pdf.setFontSize(10);
+    pdf.setFontSize(12);
     pdf.setFont('times', 'normal');
     const courseText = `Course No: ${courseInfo.courseCode || 'N/A'}    Title of the Course: ${courseInfo.courseName || 'N/A'}`;
     pdf.text(courseText, pageWidth / 2, currentY, { align: 'center' });
     currentY += 6;
 
-    pdf.setFontSize(10);
+    pdf.setFontSize(8);
     pdf.text(`Batch: ${courseInfo.batch || 'N/A'}`, pageWidth / 2, currentY, { align: 'center' });
     currentY += 10;
 
@@ -101,7 +101,7 @@ export const generateCombinedAttendancePDF = (
       body: tableData.slice(0, actualRows), // Show only rows that fit
       theme: 'grid',
       styles: {
-        fontSize: Math.min(11, Math.max(11, 180 / tableData.length)), // Dynamic font size
+        fontSize: Math.min(9, Math.max(9, 180 / tableData.length)), // Dynamic font size
         cellPadding: 2,
         halign: 'center',
         valign: 'middle',
