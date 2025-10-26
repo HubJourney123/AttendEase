@@ -129,7 +129,7 @@ export const generateCombinedAttendancePDF = (
           const percentage = parseFloat(rowData[4].replace('%', ''));
           if (percentage < 60) {
             data.cell.styles.fillColor = [220, 220, 220]; // Light gray background
-            data.cell.styles.textColor = [240, 240, 240]; // Darker gray text
+            data.cell.styles.textColor = [0, 0, 0]; // Darker gray text
           }
         }
       },
