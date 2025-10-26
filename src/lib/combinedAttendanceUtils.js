@@ -118,7 +118,7 @@ export const generateCombinedAttendancePDF = (
       columnStyles: {
         0: { halign: 'center', cellWidth: 20 },  // SL No
         1: { halign: 'center', cellWidth: 25 },  // Roll No
-        2: { halign: 'left', cellWidth: 40 },    // Name
+        2: { halign: 'left', cellWidth: 60 },    // Name
         3: { halign: 'center', cellWidth: 35 },  // Total Attendance
         4: { halign: 'center', cellWidth: 30 }   // Percentage
       },
