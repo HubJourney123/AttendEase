@@ -256,7 +256,7 @@ export const generatePDF = (
         pdf.rect(startX + 8, yPosition, 18, cellHeight);
         pdf.text(roll, startX + 17, yPosition + 3.5, { align: "center" });
 
-        pdf.rect(startX + 26, yPosition, 40, cellHeight);
+        pdf.rect(startX + 26, yPosition, 30, cellHeight);
 
         let xPosRow = startX + 66;
         const dateWidth = 9;
