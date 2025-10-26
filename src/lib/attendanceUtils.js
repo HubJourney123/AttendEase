@@ -201,7 +201,7 @@ export const generatePDF = (
       pdf.text("Roll No.", startX + 17, yPos + 3.5, { align: "center" });
       pdf.text("Name of the Student", startX + 41, yPos + 3.5, { align: "center" });
 
-      let xPos = startX + 66;
+      let xPos = startX + 56;
       const dateWidth = 9;
       validDates.forEach((date) => {
         pdf.setFillColor(240, 240, 240);
@@ -258,7 +258,7 @@ export const generatePDF = (
 
         pdf.rect(startX + 26, yPosition, 30, cellHeight);
 
-        let xPosRow = startX + 66;
+        let xPosRow = startX + 56;
         const dateWidth = 9;
         validDates.forEach((date, dateIndex) => {
           pdf.rect(xPosRow, yPosition, dateWidth, cellHeight);
