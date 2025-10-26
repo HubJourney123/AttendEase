@@ -118,7 +118,7 @@ export const generateCombinedAttendancePDF = (
       columnStyles: {
         0: { halign: 'center', cellWidth: 20 },  // SL No
         1: { halign: 'center', cellWidth: 25 },  // Roll No
-        2: { halign: 'left', cellWidth: 60 },    // Name
+        2: { halign: 'left', cellWidth: 40 },    // Name
         3: { halign: 'center', cellWidth: 35 },  // Total Attendance
         4: { halign: 'center', cellWidth: 30 }   // Percentage
       },
@@ -129,7 +129,7 @@ export const generateCombinedAttendancePDF = (
           const percentage = parseFloat(rowData[4].replace('%', ''));
           if (percentage < 60) {
             data.cell.styles.fillColor = [220, 220, 220]; // Light gray background
-            data.cell.styles.textColor = [80, 80, 80]; // Darker gray text
+            data.cell.styles.textColor = [240, 240, 240]; // Darker gray text
           }
         }
       },
