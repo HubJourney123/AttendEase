@@ -156,7 +156,7 @@ export const generateCombinedAttendancePDF = (
 
     // Warning if data was truncated
     if (tableData.length > actualRows) {
-      pdf.setFontSize(8);
+      pdf.setFontSize(12);
       pdf.setTextColor(255, 0, 0); // Red text
       pdf.text(`Note: Showing first ${actualRows} of ${tableData.length} students to fit on single page`, 15, signatureY + 35);
     }
