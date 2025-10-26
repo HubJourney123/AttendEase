@@ -102,7 +102,7 @@ export const generateCombinedAttendancePDF = (
       theme: 'grid',
       styles: {
         fontSize: Math.min(9, Math.max(9, 180 / tableData.length)), // Dynamic font size
-        cellPadding: 2,
+        cellPadding: 1.5,
         halign: 'center',
         valign: 'middle',
         lineWidth: 0.1,
