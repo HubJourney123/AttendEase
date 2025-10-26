@@ -192,14 +192,14 @@ export const generatePDF = (
 
       pdf.rect(startX, yPos, 8, cellHeight, "FD");
       pdf.rect(startX + 8, yPos, 18, cellHeight, "FD");
-      pdf.rect(startX + 26, yPos, 40, cellHeight, "FD");
+      pdf.rect(startX + 26, yPos, 30, cellHeight, "FD");
 
       pdf.setFontSize(8);
       pdf.setFont('times', "bold");
       pdf.setTextColor(0, 0, 0);
       pdf.text("SL.", startX + 4, yPos + 3.5, { align: "center" });
       pdf.text("Roll No.", startX + 17, yPos + 3.5, { align: "center" });
-      pdf.text("Name of the Student", startX + 46, yPos + 3.5, { align: "center" });
+      pdf.text("Name of the Student", startX + 41, yPos + 3.5, { align: "center" });
 
       let xPos = startX + 66;
       const dateWidth = 9;
