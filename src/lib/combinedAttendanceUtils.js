@@ -147,12 +147,13 @@ export const generateCombinedAttendancePDF = (
     pdf.setFont('times', 'normal');
     pdf.text('Teacher\'s Name & Signature', 15, signatureY);
     
-    // Two signature lines for two teachers
-    pdf.text('(1)', 15, signatureY + 10);
-    pdf.line(25, signatureY + 13, 85, signatureY + 13); // First signature line
-    
-    pdf.text('(2)', 15, signatureY + 20);
-    pdf.line(25, signatureY + 23, 85, signatureY + 23); // Second signature line
+// Two signature lines side by side
+pdf.text('(1)', 15, signatureY + 10);
+pdf.line(25, signatureY + 13, 85, signatureY + 13); // First signature line
+
+pdf.text('(2)', 110, signatureY + 10);
+pdf.line(120, signatureY + 13, 180, signatureY + 13); // Second signature line
+
 
     // Warning if data was truncated
     if (tableData.length > actualRows) {
