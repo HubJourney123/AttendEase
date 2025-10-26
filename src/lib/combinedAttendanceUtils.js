@@ -57,13 +57,13 @@ export const generateCombinedAttendancePDF = (
     currentY += 10;
 
     // Course details
-    pdf.setFontSize(11);
+    pdf.setFontSize(10);
     pdf.setFont('times', 'normal');
     const courseText = `Course No: ${courseInfo.courseCode || 'N/A'}    Title of the Course: ${courseInfo.courseName || 'N/A'}`;
     pdf.text(courseText, pageWidth / 2, currentY, { align: 'center' });
     currentY += 6;
 
-    pdf.setFontSize(11);
+    pdf.setFontSize(10);
     pdf.text(`Batch: ${courseInfo.batch || 'N/A'}`, pageWidth / 2, currentY, { align: 'center' });
     currentY += 10;
 
@@ -133,7 +133,7 @@ export const generateCombinedAttendancePDF = (
           }
         }
       },
-      margin: { top: 10, left: 15, right: 15 },
+      margin: { top: 8, left: 15, right: 15 },
       tableWidth: 'auto',
       pageBreak: 'avoid'
     });
@@ -156,7 +156,7 @@ export const generateCombinedAttendancePDF = (
 
     // Warning if data was truncated
     if (tableData.length > actualRows) {
-      pdf.setFontSize(11);
+      pdf.setFontSize(10);
       pdf.setTextColor(255, 0, 0); // Red text
       pdf.text(`Note: Showing first ${actualRows} of ${tableData.length} students to fit on single page`, 15, signatureY + 35);
     }
