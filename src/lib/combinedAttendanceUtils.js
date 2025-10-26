@@ -48,13 +48,13 @@ export const generateCombinedAttendancePDF = (
     pdf.setFontSize(16);
     pdf.setFont('times', 'bold');
     pdf.text('Khulna University of Engineering & Technology', pageWidth / 2, currentY, { align: 'center' });
-    currentY += 8;
+    currentY += 6;
 
     // Department name in English
     pdf.setFontSize(14);
     pdf.setFont('times', 'normal');
     pdf.text(departmentEnglish, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 10;
+    currentY += 6;
 
     // Course details
     pdf.setFontSize(12);
@@ -63,7 +63,7 @@ export const generateCombinedAttendancePDF = (
     pdf.text(courseText, pageWidth / 2, currentY, { align: 'center' });
     currentY += 6;
 
-    pdf.setFontSize(8);
+    pdf.setFontSize(12);
     pdf.text(`Batch: ${courseInfo.batch || 'N/A'}`, pageWidth / 2, currentY, { align: 'center' });
     currentY += 10;
 
